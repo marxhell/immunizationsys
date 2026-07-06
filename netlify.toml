@@ -1,5 +1,6 @@
 [build]
   publish = "frontend"
+  command = "echo 'Static site deployment'"
 
 [[redirects]]
   from = "/*"
@@ -14,3 +15,4 @@
 
 [context.branch-deploy.environment]
   REACT_APP_BACKEND_URL = "http://localhost:5000/api"
+

@@ -4,8 +4,8 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: npm install --prefix backend
+    startCommand: npm start --prefix backend
     envVars:
       - key: MONGODB_URI
         sync: false

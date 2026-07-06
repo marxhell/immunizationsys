@@ -135,7 +135,19 @@
   </div>
 
   <script>
-    const API_BASE_URL = ['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api';
+    // Determine API base URL based on environment
+    const getApiBaseUrl = () => {
+      const isDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+      
+      if (isDevelopment) {
+        return 'http://localhost:5000/api';
+      }
+      
+      // Production: use Render backend
+      return 'https://child-immunization-api.onrender.com/api';
+    };
+
+    const API_BASE_URL = getApiBaseUrl();
 
     async function handleParentLogin(event) {
       event.preventDefault();
