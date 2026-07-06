@@ -70,6 +70,7 @@ function toggleSidebar() {
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.toggle('open');
   if (overlay) overlay.classList.toggle('show');
+  document.body.classList.toggle('sidebar-open');
 }
 
 function closeSidebar() {
@@ -77,6 +78,7 @@ function closeSidebar() {
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.remove('open');
   if (overlay) overlay.classList.remove('show');
+  document.body.classList.remove('sidebar-open');
 }
 
 function getCurrentUser() {
