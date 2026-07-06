@@ -16,11 +16,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Enhanced CORS for production
+const frontendUrlRaw = process.env.FRONTEND_URL || process.env.FRONTEND_URI || '';
+const frontendUrl = frontendUrlRaw.replace(/\/$/, '');
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
   'https://immunization-system.netlify.app',
-  process.env.FRONTEND_URL,
+  frontendUrl,
 ].filter(Boolean);
 
 app.use(cors({
@@ -37,9 +39,6 @@ app.use(cors({
     } catch (e) {
       // ignore
     }
-
-    // Fallback to environment variable if explicitly set
-    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return callback(null, true);
 
     // Otherwise reject
     console.warn(`Blocked CORS request from origin: ${origin}`);

@@ -35,15 +35,17 @@ router.post('/', protect, async (req, res) => {
       status: 'scheduled',
     });
 
+    res.status(201).json({ success: true, data: appointment });
+
     if (child.guardianEmail) {
-      await sendMail({
+      sendMail({
         to: child.guardianEmail,
         subject: 'New vaccination appointment scheduled',
         html: `<p>Hello ${child.guardianName || child.firstName},</p><p>A new vaccination appointment has been scheduled for ${child.firstName} ${child.lastName} on ${new Date(appointmentDate).toDateString()} at ${appointmentTime || 'TBD'}.</p>`,
+      }).catch((err) => {
+        console.error('Failed to send appointment email:', err);
       });
     }
-
-    res.status(201).json({ success: true, data: appointment });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -65,10 +67,12 @@ router.post('/reminders', protect, async (req, res) => {
     for (const appointment of upcoming) {
       const child = appointment.childId;
       if (child?.guardianEmail) {
-        await sendMail({
+        sendMail({
           to: child.guardianEmail,
           subject: 'Vaccination appointment reminder',
           html: `<p>Hello ${child.guardianName || child.firstName},</p><p>This is a reminder that ${child.firstName} ${child.lastName} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
+        }).catch((err) => {
+          console.error('Failed to send reminder email:', err);
         });
         sent += 1;
       }
