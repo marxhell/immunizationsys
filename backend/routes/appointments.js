@@ -64,23 +64,31 @@ router.post('/reminders', protect, async (req, res) => {
     }).populate('childId');
 
     let sent = 0;
+    let failed = 0;
+
     for (const appointment of upcoming) {
       const child = appointment.childId;
-      if (child?.guardianEmail) {
-        sendMail({
+      if (!child?.guardianEmail) {
+        console.warn(`Skipping reminder for appointment ${appointment._id}: no guardian email`);
+        continue;
+      }
+
+      try {
+        await sendMail({
           to: child.guardianEmail,
           subject: 'Vaccination appointment reminder',
           html: `<p>Hello ${child.guardianName || child.firstName},</p><p>This is a reminder that ${child.firstName} ${child.lastName} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
-        }).catch((err) => {
-          console.error('Failed to send reminder email:', err);
         });
         sent += 1;
+        appointment.reminderSent = true;
+        await appointment.save();
+      } catch (err) {
+        console.error('Failed to send reminder email:', err);
+        failed += 1;
       }
-      appointment.reminderSent = true;
-      await appointment.save();
     }
 
-    res.json({ success: true, data: { sent, total: upcoming.length } });
+    res.json({ success: true, data: { sent, failed, total: upcoming.length } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
