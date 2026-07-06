@@ -1,7 +1,9 @@
-// Use shared getApiBaseUrl() from utils.js when available, otherwise fall back
-const API_BASE_URL = (typeof getApiBaseUrl === 'function')
-  ? getApiBaseUrl()
-  : (['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api');
+// Resolve API base URL without redeclaring a global `API_BASE_URL` to avoid conflicts
+function resolveApiBaseUrl() {
+  if (typeof window !== 'undefined' && typeof window.API_BASE_URL !== 'undefined') return window.API_BASE_URL;
+  if (typeof getApiBaseUrl === 'function') return getApiBaseUrl();
+  return (['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api');
+}
 
 function getParentAuthHeaders() {
   const token = localStorage.getItem('parentToken');
@@ -33,7 +35,7 @@ async function loadParentDashboard() {
   document.getElementById('welcomeMessage').textContent = `Welcome, ${user.name || 'Parent'}!`;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/children/parent/me`, { headers: getParentAuthHeaders() });
+    const response = await fetch(`${resolveApiBaseUrl()}/children/parent/me`, { headers: getParentAuthHeaders() });
     const contentType = response.headers.get('content-type') || '';
     let result;
     if (contentType.includes('application/json')) {
