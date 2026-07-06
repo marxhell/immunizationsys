@@ -15,7 +15,27 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Enhanced CORS for production
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'https://immunization-system.netlify.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -30,7 +50,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: 'Server is healthy' });
+  res.json({ success: true, message: 'Server is healthy', timestamp: new Date() });
 });
 
 app.use('/api/auth', require('./routes/auth'));

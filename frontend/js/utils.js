@@ -1,4 +1,17 @@
-const API_BASE_URL = ['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api';
+// Determine API base URL based on environment
+const getApiBaseUrl = () => {
+  const isDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+  
+  if (isDevelopment) {
+    return 'http://localhost:5000/api';
+  }
+  
+  // Production: use environment variable or fallback to Render URL
+  const backendUrl = window.__BACKEND_URL__ || process.env.REACT_APP_BACKEND_URL || 'https://child-immunization-api.onrender.com/api';
+  return backendUrl;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
