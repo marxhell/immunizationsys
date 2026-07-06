@@ -147,7 +147,9 @@ if (document.addEventListener) {
   document.addEventListener('DOMContentLoaded', () => {
     buildSidebar();
     populateUserDisplay();
-    if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('parent-login.html')) {
+    // Don't enforce staff authentication on parent pages (they use `parentToken`)
+    const isParentPage = window.location.pathname.includes('parent-') || window.location.pathname.includes('/parent/');
+    if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('parent-login.html') && !isParentPage) {
       ensureAuthenticated();
     }
   });
