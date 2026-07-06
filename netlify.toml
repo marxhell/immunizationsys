@@ -8,7 +8,7 @@
   status = 200
 
 [context.production.environment]
-  REACT_APP_BACKEND_URL = "https://child-immunization-api.onrender.com/api"
+  REACT_APP_BACKEND_URL = "https://immunizationsys.onrender.com/api"
 
 [context.deploy-preview.environment]
   REACT_APP_BACKEND_URL = "http://localhost:5000/api"

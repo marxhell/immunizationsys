@@ -6,9 +6,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:5000/api';
   }
   
-  // Production: use environment variable or fallback to Render URL
-  const backendUrl = window.__BACKEND_URL__ || process.env.REACT_APP_BACKEND_URL || 'https://child-immunization-api.onrender.com/api';
-  return backendUrl;
+  // Production: use Render backend
+  return 'https://immunizationsys.onrender.com/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
