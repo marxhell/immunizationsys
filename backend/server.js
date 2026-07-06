@@ -25,11 +25,25 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow server-to-server or direct tools (no origin)
+    if (!origin) return callback(null, true);
+
+    // Exact matches from allowedOrigins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    // Allow Netlify preview/custom Netlify sites (endsWith .netlify.app)
+    try {
+      if (origin.endsWith('.netlify.app')) return callback(null, true);
+    } catch (e) {
+      // ignore
     }
+
+    // Fallback to environment variable if explicitly set
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return callback(null, true);
+
+    // Otherwise reject
+    console.warn(`Blocked CORS request from origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
