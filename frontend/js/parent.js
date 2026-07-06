@@ -1,4 +1,7 @@
-const API_BASE_URL = ['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api';
+// Use shared getApiBaseUrl() from utils.js when available, otherwise fall back
+const API_BASE_URL = (typeof getApiBaseUrl === 'function')
+  ? getApiBaseUrl()
+  : (['localhost', '127.0.0.1', '[::1]', ''].includes(window.location.hostname) ? 'http://localhost:5000/api' : '/api');
 
 function getParentAuthHeaders() {
   const token = localStorage.getItem('parentToken');
@@ -31,7 +34,14 @@ async function loadParentDashboard() {
 
   try {
     const response = await fetch(`${API_BASE_URL}/children/parent/me`, { headers: getParentAuthHeaders() });
-    const result = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let result;
+    if (contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error(`Unexpected response type: ${contentType || 'text/html'} — ${text.slice(0,200)}`);
+    }
     if (!response.ok) throw new Error(result.message || 'Failed to load parent dashboard');
 
     const payload = result.data || {};
