@@ -74,6 +74,7 @@ app.use('/api/inventory', require('./routes/inventory'));
 app.use('/api/vaccinations', require('./routes/vaccinations'));
 app.use('/api/schedule', require('./routes/schedule'));
 app.use('/api/backup', require('./routes/backup'));
+app.use('/api/test-email', require('./routes/test-email'));
 app.use('/api/reports', require('./routes/reports'));
 
 app.use((err, req, res, next) => {
