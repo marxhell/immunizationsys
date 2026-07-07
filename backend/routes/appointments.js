@@ -96,10 +96,53 @@ router.post('/', protect, async (req, res) => {
         to: child.guardianEmail,
         subject: 'New vaccination appointment scheduled',
         html: `<p>Hello ${child.guardianName || child.firstName},</p><p>A new vaccination appointment has been scheduled for ${child.firstName} ${child.lastName} on ${new Date(appointmentDate).toDateString()} at ${appointmentTime || 'TBD'}.</p>`,
-      }).catch((err) => {
-        console.error('Failed to send appointment email:', err);
+      }).then((result) => {
+        if (!result.success) console.warn('Appointment created but email not sent:', result.error);
       });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const { vaccineName, appointmentDate, appointmentTime, status } = req.body;
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    if (vaccineName) appointment.vaccineName = vaccineName;
+    if (appointmentDate) {
+      const normalizedDate = normalizeAppointmentDate(appointmentDate, appointmentTime);
+      if (normalizedDate) appointment.appointmentDate = normalizedDate;
+    }
+    if (appointmentTime) appointment.appointmentTime = appointmentTime;
+    if (status) {
+      const validStatuses = ['scheduled', 'completed', 'missed', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status value' });
+      }
+      appointment.status = status;
+    }
+
+    await appointment.save();
+
+    // Notify guardian if rescheduled
+    if (appointmentDate && appointment.childId) {
+      const child = await Child.findById(appointment.childId);
+      if (child && child.guardianEmail) {
+        sendMail({
+          to: child.guardianEmail,
+          subject: 'Vaccination appointment updated',
+          html: `<p>Hello ${child.guardianName || child.firstName},</p><p>The vaccination appointment for ${child.firstName} ${child.lastName} has been updated.</p><p><strong>New Date:</strong> ${new Date(appointmentDate).toDateString()} at ${appointmentTime || 'TBD'}</p><p><strong>Status:</strong> ${status || 'scheduled'}</p>`,
+        }).catch((err) => console.error('Failed to send update email:', err));
+      }
+    }
+
+    res.json({ success: true, data: appointment });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });

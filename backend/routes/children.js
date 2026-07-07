@@ -69,6 +69,44 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const { firstName, lastName, dateOfBirth, gender, bloodGroup, guardianName, guardianRelationship, guardianEmail, guardianPhone, notes } = req.body;
+
+    const child = await Child.findById(req.params.id);
+    if (!child) {
+      return res.status(404).json({ success: false, message: 'Child not found' });
+    }
+
+    if (firstName) child.firstName = String(firstName).trim();
+    if (lastName) child.lastName = String(lastName).trim();
+    if (dateOfBirth) {
+      const normalizedDob = new Date(dateOfBirth);
+      if (Number.isNaN(normalizedDob.getTime())) {
+        return res.status(400).json({ success: false, message: 'Date of birth is invalid' });
+      }
+      child.dateOfBirth = normalizedDob;
+    }
+    if (gender) child.gender = gender;
+    if (bloodGroup !== undefined) child.bloodGroup = bloodGroup;
+    if (guardianName !== undefined) child.guardianName = String(guardianName).trim();
+    if (guardianRelationship !== undefined) child.guardianRelationship = String(guardianRelationship).trim();
+    if (guardianEmail !== undefined) child.guardianEmail = String(guardianEmail).trim();
+    if (guardianPhone !== undefined) child.guardianPhone = String(guardianPhone).trim();
+    if (notes !== undefined) child.notes = String(notes).trim();
+
+    if (!firstName && !lastName && !dateOfBirth && !gender && bloodGroup === undefined && guardianName === undefined && guardianRelationship === undefined && guardianEmail === undefined && guardianPhone === undefined && notes === undefined) {
+      return res.status(400).json({ success: false, message: 'No updates provided' });
+    }
+
+    await child.save();
+    res.json({ success: true, data: child });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 router.delete('/:id', protect, async (req, res) => {
   try {
     if (req.user?.role !== 'admin') {
