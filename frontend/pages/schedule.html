@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaccination Schedule - Child Vaccination System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div id="app" class="d-flex">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h5 class="mb-1">Child Vaccination</h5>
+        <small>Kenyenya District Hospital</small>
+      </div>
+      <ul id="sidebarMenu" class="nav flex-column"></ul>
+    </nav>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Main content -->
+    <div class="main-content flex-grow-1">
+      <nav class="navbar navbar-light bg-white shadow-sm mb-4 p-3 d-md-none">
+        <button class="btn btn-outline-primary" onclick="toggleSidebar()">☰ Menu</button>
+        <span id="userDisplay" class="text-muted small"></span>
+      </nav>
+
+      <div class="container-fluid">
+        <h2 class="mb-4">Vaccination Schedule</h2>
+
+        <!-- Child Selector -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Select Child</label>
+                <select id="scheduleChildSelect" class="form-select" onchange="loadChildSchedule()">
+                  <option value="">-- Select a child --</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Age</label>
+                <p id="childAgeDisplay" class="form-control-plaintext fw-bold">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Summary Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="card text-bg-danger h-100">
+              <div class="card-body text-center">
+                <h3 id="dueCount">0</h3>
+                <h6 class="card-title">Due Now</h6>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card text-bg-warning h-100">
+              <div class="card-body text-center">
+                <h3 id="upcomingCount">0</h3>
+                <h6 class="card-title">Upcoming</h6>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card text-bg-success h-100">
+              <div class="card-body text-center">
+                <h3 id="completedCount">0</h3>
+                <h6 class="card-title">Completed</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Due Vaccines -->
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Due Vaccines <span id="dueBadge" class="badge bg-light text-dark ms-2">0</span></h5>
+          </div>
+          <div class="card-body" id="dueVaccinesList">
+            <div class="alert alert-info mb-0">Select a child to view due vaccines.</div>
+          </div>
+        </div>
+
+        <!-- Upcoming Vaccines -->
+        <div class="card mb-4">
+          <div class="card-header bg-warning">
+            <h5 class="mb-0">Upcoming Vaccines <span id="upcomingBadge" class="badge bg-dark ms-2">0</span></h5>
+          </div>
+          <div class="card-body" id="upcomingVaccinesList">
+            <div class="alert alert-info mb-0">Select a child to view upcoming vaccines.</div>
+          </div>
+        </div>
+
+        <!-- Completed Vaccines -->
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Completed Vaccines <span id="completedBadge" class="badge bg-light text-dark ms-2">0</span></h5>
+          </div>
+          <div class="card-body" id="completedVaccinesList">
+            <div class="alert alert-info mb-0">Select a child to view completed vaccines.</div>
+          </div>
+        </div>
+
+        <!-- Reference Schedule -->
+        <div class="card mb-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Full KEPI Reference Schedule</h5>
+          </div>
+          <div class="card-body" id="referenceSchedule">
+            <div class="alert alert-info mb-0">Loading reference schedule...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/schedule.js"></script>
+</body>
+</html>
