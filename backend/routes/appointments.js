@@ -74,11 +74,29 @@ router.post('/reminders', protect, async (req, res) => {
     const now = new Date();
     const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-    const upcoming = await Appointment.find({
+    const candidates = await Appointment.find({
       status: 'scheduled',
-      appointmentDate: { $gte: now, $lte: windowEnd },
       reminderSent: false,
     }).populate('childId');
+
+    const upcoming = candidates.filter((appointment) => {
+      const appointmentDate = normalizeAppointmentDate(appointment.appointmentDate, appointment.appointmentTime);
+      if (!appointmentDate || Number.isNaN(appointmentDate.getTime())) {
+        return false;
+      }
+
+      if (appointmentDate >= now && appointmentDate <= windowEnd) {
+        if (typeof appointment.appointmentDate === 'string' && !String(appointment.appointmentDate).includes('T')) {
+          appointment.appointmentDate = appointmentDate;
+          appointment.save().catch((err) => {
+            console.warn('Failed to migrate appointment date during reminder run:', err);
+          });
+        }
+        return true;
+      }
+
+      return false;
+    });
 
     let sent = 0;
     let failed = 0;
