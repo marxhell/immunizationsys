@@ -6,6 +6,21 @@ const { sendMail } = require('../utils/email');
 
 const router = express.Router();
 
+function normalizeAppointmentDate(dateValue, timeValue) {
+  if (!dateValue) return null;
+
+  if (dateValue instanceof Date) return dateValue;
+
+  if (typeof dateValue === 'string' && dateValue.includes('T')) {
+    return new Date(dateValue);
+  }
+
+  const rawTime = typeof timeValue === 'string' && timeValue.trim() ? timeValue.trim() : '00:00';
+  const combined = `${dateValue}T${rawTime}`;
+  const parsed = new Date(combined);
+  return Number.isNaN(parsed.getTime()) ? new Date(dateValue) : parsed;
+}
+
 router.get('/', protect, async (req, res) => {
   try {
     const appointments = await Appointment.find().sort({ appointmentDate: 1 });
@@ -26,11 +41,13 @@ router.post('/', protect, async (req, res) => {
     const child = await Child.findById(childId);
     if (!child) return res.status(404).json({ success: false, message: 'Child not found' });
 
+    const normalizedAppointmentDate = normalizeAppointmentDate(appointmentDate, appointmentTime);
+
     const appointment = await Appointment.create({
       childId,
       childName: `${child.firstName} ${child.lastName}`,
       vaccineName,
-      appointmentDate,
+      appointmentDate: normalizedAppointmentDate,
       appointmentTime,
       status: 'scheduled',
     });
