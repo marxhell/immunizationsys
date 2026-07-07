@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
 const Child = require('../models/Child');
 const { protect } = require('../middleware/auth');
@@ -19,6 +20,42 @@ function normalizeAppointmentDate(dateValue, timeValue) {
   const combined = `${dateValue}T${rawTime}`;
   const parsed = new Date(combined);
   return Number.isNaN(parsed.getTime()) ? new Date(dateValue) : parsed;
+}
+
+async function resolveGuardianContact(child) {
+  if (!child) return null;
+
+  if (child.guardianEmail) {
+    return {
+      email: child.guardianEmail,
+      name: child.guardianName || `${child.firstName || ''} ${child.lastName || ''}`.trim(),
+    };
+  }
+
+  const guardianIds = Array.isArray(child.guardians) ? child.guardians : [];
+  if (!guardianIds.length) {
+    return null;
+  }
+
+  const db = mongoose.connection.db;
+  if (!db) return null;
+
+  for (const guardianId of guardianIds) {
+    let normalizedGuardianId = guardianId;
+    if (typeof guardianId === 'string' && mongoose.Types.ObjectId.isValid(guardianId)) {
+      normalizedGuardianId = new mongoose.Types.ObjectId(guardianId);
+    }
+
+    const guardianDoc = await db.collection('guardians').findOne({ _id: normalizedGuardianId });
+    if (guardianDoc?.email) {
+      return {
+        email: guardianDoc.email,
+        name: guardianDoc.name || guardianDoc.fullName || child.guardianName || `${child.firstName || ''} ${child.lastName || ''}`.trim(),
+      };
+    }
+  }
+
+  return null;
 }
 
 router.get('/', protect, async (req, res) => {
@@ -76,46 +113,63 @@ router.post('/reminders', protect, async (req, res) => {
 
     const candidates = await Appointment.find({
       status: 'scheduled',
-      reminderSent: false,
-    }).populate('childId');
-
-    const upcoming = candidates.filter((appointment) => {
-      const appointmentDate = normalizeAppointmentDate(appointment.appointmentDate, appointment.appointmentTime);
-      if (!appointmentDate || Number.isNaN(appointmentDate.getTime())) {
-        return false;
-      }
-
-      if (appointmentDate >= now && appointmentDate <= windowEnd) {
-        if (typeof appointment.appointmentDate === 'string' && !String(appointment.appointmentDate).includes('T')) {
-          appointment.appointmentDate = appointmentDate;
-          appointment.save().catch((err) => {
-            console.warn('Failed to migrate appointment date during reminder run:', err);
-          });
-        }
-        return true;
-      }
-
-      return false;
+      $or: [
+        { reminderSent: false },
+        { reminderSent: { $exists: false } },
+        { reminderSent: null },
+      ],
     });
 
-    let sent = 0;
-    let failed = 0;
+    const upcoming = [];
 
-    for (const appointment of upcoming) {
-      const child = appointment.childId;
-      if (!child?.guardianEmail) {
+    for (const appointment of candidates) {
+      const appointmentDate = normalizeAppointmentDate(appointment.appointmentDate, appointment.appointmentTime);
+      if (!appointmentDate || Number.isNaN(appointmentDate.getTime())) {
+        continue;
+      }
+
+      if (appointmentDate < now || appointmentDate > windowEnd) {
+        continue;
+      }
+
+      if (typeof appointment.appointmentDate === 'string' && !String(appointment.appointmentDate).includes('T')) {
+        appointment.appointmentDate = appointmentDate;
+        await appointment.save().catch((err) => {
+          console.warn('Failed to migrate appointment date during reminder run:', err);
+        });
+      }
+
+      const childId = appointment.childId || appointment.child;
+      let child = null;
+      if (childId) {
+        const normalizedChildId = mongoose.Types.ObjectId.isValid(childId) ? new mongoose.Types.ObjectId(childId) : childId;
+        child = await Child.findById(normalizedChildId);
+      }
+
+      const guardianContact = await resolveGuardianContact(child);
+      if (!guardianContact?.email) {
         console.warn(`Skipping reminder for appointment ${appointment._id}: no guardian email`);
         continue;
       }
 
+      upcoming.push({ appointment, child, guardianContact });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const { appointment, child, guardianContact } of upcoming) {
       try {
         await sendMail({
-          to: child.guardianEmail,
+          to: guardianContact.email,
           subject: 'Vaccination appointment reminder',
-          html: `<p>Hello ${child.guardianName || child.firstName},</p><p>This is a reminder that ${child.firstName} ${child.lastName} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
+          html: `<p>Hello ${guardianContact.name || child?.firstName || 'Parent'},</p><p>This is a reminder that ${child?.firstName || 'your child'} ${child?.lastName || ''} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
         });
         sent += 1;
         appointment.reminderSent = true;
+        if (!appointment.childId && child._id) {
+          appointment.childId = child._id;
+        }
         await appointment.save();
       } catch (err) {
         console.error('Failed to send reminder email:', err);

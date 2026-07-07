@@ -26,6 +26,7 @@ const childSchema = new mongoose.Schema({
     enum: ['male', 'female', 'other'],
   },
   bloodGroup: String,
+  guardians: [{ type: mongoose.Schema.Types.Mixed }],
   guardianName: String,
   guardianRelationship: String,
   guardianEmail: String,
