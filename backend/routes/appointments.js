@@ -202,21 +202,23 @@ router.post('/reminders', protect, async (req, res) => {
     let failed = 0;
 
     for (const { appointment, child, guardianContact } of upcoming) {
-      try {
-        await sendMail({
-          to: guardianContact.email,
-          subject: 'Vaccination appointment reminder',
-          html: `<p>Hello ${guardianContact.name || child?.firstName || 'Parent'},</p><p>This is a reminder that ${child?.firstName || 'your child'} ${child?.lastName || ''} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
-        });
+      const result = await sendMail({
+        to: guardianContact.email,
+        subject: 'Vaccination appointment reminder',
+        html: `<p>Hello ${guardianContact.name || child?.firstName || 'Parent'},</p><p>This is a reminder that ${child?.firstName || 'your child'} ${child?.lastName || ''} has a vaccination appointment scheduled for ${new Date(appointment.appointmentDate).toLocaleString()}.</p><p>Please arrive a few minutes early.</p>`,
+      });
+
+      if (result.success) {
         sent += 1;
         appointment.reminderSent = true;
         if (!appointment.childId && child._id) {
           appointment.childId = child._id;
         }
         await appointment.save();
-      } catch (err) {
-        console.error('Failed to send reminder email:', err);
+        console.log(`Reminder sent to ${guardianContact.email}`);
+      } else {
         failed += 1;
+        console.error(`Failed to send reminder to ${guardianContact.email}:`, result.error);
       }
     }
 

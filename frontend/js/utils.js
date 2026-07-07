@@ -38,6 +38,7 @@ function buildSidebar() {
     { label: 'Dashboard', href: 'dashboard.html' },
     { label: 'Children', href: 'children.html' },
     { label: 'Vaccinations', href: 'vaccinations.html' },
+    { label: 'Schedule', href: 'schedule.html' },
     { label: 'Appointments', href: 'appointments.html' },
     { label: 'Inventory', href: 'inventory.html' },
     { label: 'Reports', href: 'reports.html' },
