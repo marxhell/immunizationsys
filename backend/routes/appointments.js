@@ -152,16 +152,16 @@ router.put('/:id', protect, async (req, res) => {
 router.post('/reminders', protect, async (req, res) => {
   try {
     const now = new Date();
-    const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    // Check for appointments within the next 7 days (not just 24 hours)
+    // to ensure we catch appointments across a wider window
+    const windowEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+    // Get ALL scheduled appointments (not just unsent ones, because
+    // the previous buggy code marked reminders as sent without actually sending)
     const candidates = await Appointment.find({
       status: 'scheduled',
-      $or: [
-        { reminderSent: false },
-        { reminderSent: { $exists: false } },
-        { reminderSent: null },
-      ],
     });
+    console.log(`Reminder check: found ${candidates.length} scheduled appointments`);
 
     const upcoming = [];
 
