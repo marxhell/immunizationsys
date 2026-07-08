@@ -16,18 +16,21 @@ function createTransporter() {
     return null;
   }
 
+  // Render blocks outbound port 465, so we use port 587 (STARTTLS)
+  // which is universally allowed on cloud platforms
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: {
       user: user,
       pass: pass,
     },
-    // Timeout settings to prevent hanging
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    // Longer timeouts for Render's cold-start
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
   });
 }
 
