@@ -151,17 +151,18 @@ router.put('/:id', protect, async (req, res) => {
 
 router.post('/reminders', protect, async (req, res) => {
   try {
+    // Normalize current time to start of today (midnight) so that today's
+    // appointments (stored as 2026-07-08T00:00:00) are NOT filtered out
     const now = new Date();
-    // Check for appointments within the next 7 days (not just 24 hours)
-    // to ensure we catch appointments across a wider window
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const windowEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Get ALL scheduled appointments (not just unsent ones, because
-    // the previous buggy code marked reminders as sent without actually sending)
+    // Get ALL scheduled appointments (the old buggy code marked reminders as
+    // sent without actually sending, so we ignore that flag)
     const candidates = await Appointment.find({
       status: 'scheduled',
     });
-    console.log(`Reminder check: found ${candidates.length} scheduled appointments`);
+    console.log(`Reminder check: found ${candidates.length} scheduled appointments at ${now.toISOString()}`);
 
     const upcoming = [];
 
@@ -171,7 +172,10 @@ router.post('/reminders', protect, async (req, res) => {
         continue;
       }
 
-      if (appointmentDate < now || appointmentDate > windowEnd) {
+      // BUG FIX: Compare against start of today (midnight) instead of current time
+      // Otherwise appointments scheduled for today (e.g. 2026-07-08T00:00:00) are
+      // skipped because midnight < current time (e.g. 5:41 PM)
+      if (appointmentDate < startOfToday || appointmentDate > windowEnd) {
         continue;
       }
 
