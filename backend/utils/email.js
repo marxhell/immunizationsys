@@ -1,53 +1,25 @@
-const nodemailer = require('nodemailer');
+/**
+ * Email Utility
+ * Uses SendGrid API (HTTPS) to send emails. Works on all cloud platforms
+ * including Render free tier (which blocks SMTP ports 25, 465, 587).
+ *
+ * For this to work, add ONE environment variable in Render:
+ *   SENDGRID_API_KEY = your_sendgrid_api_key_here
+ *
+ * Also verify ogarishelton@gmail.com as a Single Sender in SendGrid.
+ */
 
-// Clean the app password: Google App Passwords are 16 chars, no spaces
-function cleanAppPassword(pass) {
-  if (!pass) return '';
-  return String(pass).replace(/\s+/g, '').trim();
-}
-
-// Create transporter with explicit Gmail SMTP settings for reliability
-function createTransporter() {
-  const user = process.env.EMAIL_USER;
-  const pass = cleanAppPassword(process.env.EMAIL_PASS);
-
-  if (!user || !pass) {
-    console.warn('Email credentials not configured; emails will be skipped');
-    return null;
-  }
-
-  // Render blocks outbound port 465, so we use port 587 (STARTTLS)
-  // which is universally allowed on cloud platforms
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: {
-      user: user,
-      pass: pass,
-    },
-    // Longer timeouts for Render's cold-start
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  });
-}
-
-let transporter = null;
+const https = require('https');
 
 /**
- * Send an email notification
- * @param {{to: string, subject: string, html: string}} options
- * @returns {Promise<{success: boolean, messageId?: string, error?: string}>}
+ * Send email via SendGrid HTTPS API
  */
 async function sendMail({ to, subject, html }) {
-  const user = process.env.EMAIL_USER;
-  const pass = cleanAppPassword(process.env.EMAIL_PASS);
+  const apiKey = process.env.SENDGRID_API_KEY;
 
-  if (!user || !pass) {
-    console.warn('Email credentials not configured; skipping email send');
-    return { success: false, error: 'Email credentials not configured' };
+  if (!apiKey) {
+    console.warn('SENDGRID_API_KEY not configured. Set it in Render Environment Variables.');
+    return { success: false, error: 'SENDGRID_API_KEY not configured' };
   }
 
   if (!to) {
@@ -55,38 +27,57 @@ async function sendMail({ to, subject, html }) {
     return { success: false, error: 'No recipient email' };
   }
 
-  // Re-create transporter if credentials changed or not initialized
-  if (!transporter) {
-    transporter = createTransporter();
-    if (!transporter) {
-      return { success: false, error: 'Failed to create email transporter' };
-    }
-  }
+  const fromEmail = 'ogarishelton@gmail.com'; // Verified sender in SendGrid
+  const fromName = process.env.EMAIL_FROM || 'Child Vaccination System';
 
-  try {
-    // Gmail requires the from address to match the authenticated user
-    const fromAddress = user;
-    const fromName = process.env.EMAIL_FROM || 'Child Vaccination System';
+  const data = JSON.stringify({
+    personalizations: [{ to: [{ email: to }] }],
+    from: { email: fromEmail, name: fromName },
+    subject: subject,
+    content: [{ type: 'text/html', value: html }],
+  });
 
-    const info = await transporter.sendMail({
-      from: `"${fromName}" <${fromAddress}>`,
-      to,
-      subject,
-      html,
+  return new Promise((resolve) => {
+    const req = https.request(
+      {
+        hostname: 'api.sendgrid.com',
+        path: '/v3/mail/send',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data),
+        },
+        timeout: 15000,
+      },
+      (res) => {
+        let body = '';
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log(`Email sent to ${to} via SendGrid`);
+            resolve({ success: true });
+          } else {
+            console.error(`SendGrid error (${res.statusCode}): ${body}`);
+            resolve({ success: false, error: `SendGrid API error: ${res.statusCode} - ${body}` });
+          }
+        });
+      }
+    );
+
+    req.on('error', (err) => {
+      console.error('SendGrid request error:', err.message);
+      resolve({ success: false, error: err.message });
     });
 
-    console.log(`Email sent successfully to ${to}: ${info.messageId}`);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error(`Failed to send email to ${to}:`, error.message);
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ success: false, error: 'SendGrid timeout' });
+    });
 
-    // If transporter failed (e.g., auth issue), reset it so it gets re-created next time
-    if (error.code === 'EAUTH' || error.code === 'ECONNECTION') {
-      transporter = null;
-    }
-
-    return { success: false, error: error.message };
-  }
+    req.write(data);
+    req.end();
+  });
 }
 
 module.exports = { sendMail };
