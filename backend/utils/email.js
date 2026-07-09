@@ -1,63 +1,77 @@
 /**
  * Email Utility
- * Tries multiple methods in order:
- * 1. Gmail SMTP on port 587 (STARTTLS) with IPv4
- * 2. Gmail SMTP on port 465 (SSL) with IPv4
- * 3. SendGrid HTTPS API
+ * Uses Brevo (formerly Sendinblue) HTTPS API — works on all cloud platforms.
+ * No SMTP ports needed. Brevo free tier: 300 emails/day.
  */
 
-const nodemailer = require('nodemailer');
 const https = require('https');
-const dns = require('dns');
 
-function cleanAppPassword(pass) {
-  if (!pass) return '';
-  return String(pass).replace(/\s+/g, '').trim();
-}
+async function sendMail({ to, subject, html }) {
+  if (!to) return { success: false, error: 'No recipient' };
 
-function getSmtpIp() {
+  const apiKey = process.env.BREVO_API_KEY;
+
+  if (!apiKey) {
+    // Fallback to SendGrid if available
+    if (process.env.SENDGRID_API_KEY) {
+      return sendViaSendGrid({ to, subject, html });
+    }
+    return { success: false, error: 'Set BREVO_API_KEY in Render env vars. Get it from https://app.brevo.com/settings/keys/api' };
+  }
+
+  const fromEmail = process.env.EMAIL_USER || 'ogarishelton@gmail.com';
+  const fromName = process.env.EMAIL_FROM || 'Child Vaccination System';
+
+  const data = JSON.stringify({
+    sender: { email: fromEmail, name: fromName },
+    to: [{ email: to }],
+    subject: subject,
+    htmlContent: html,
+  });
+
   return new Promise((resolve) => {
-    dns.resolve4('smtp.gmail.com', (err, addresses) => {
-      if (err || !addresses || !addresses.length) resolve(null);
-      else resolve(addresses[0]);
+    const req = https.request(
+      {
+        hostname: 'api.brevo.com',
+        path: '/v3/smtp/email',
+        method: 'POST',
+        headers: {
+          'api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data),
+        },
+        timeout: 15000,
+      },
+      (res) => {
+        let body = '';
+        res.on('data', (c) => (body += c));
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            console.log(`[Brevo] Sent to ${to}: ${body}`);
+            resolve({ success: true, method: 'brevo', messageId: body });
+          } else {
+            console.error(`[Brevo] Error ${res.statusCode}: ${body}`);
+            resolve({ success: false, error: `Brevo ${res.statusCode}: ${body}` });
+          }
+        });
+      }
+    );
+    req.on('error', (e) => {
+      console.error(`[Brevo] Network error: ${e.message}`);
+      resolve({ success: false, error: e.message });
     });
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ success: false, error: 'Brevo API timeout' });
+    });
+    req.write(data);
+    req.end();
   });
 }
 
-async function trySendGmail({ to, subject, html }, port, secure) {
-  const user = process.env.EMAIL_USER;
-  const pass = cleanAppPassword(process.env.EMAIL_PASS);
-  if (!user || !pass) return null;
-
-  const smtpIp = await getSmtpIp();
-  if (!smtpIp) return null;
-
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpIp,
-      port,
-      secure,
-      auth: { user, pass },
-      tls: { servername: 'smtp.gmail.com' },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    });
-
-    const info = await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM || 'Child Vaccination System'}" <${user}>`,
-      to,
-      subject,
-      html,
-    });
-    console.log(`[Gmail:${port}] Sent to ${to}: ${info.messageId}`);
-    return { success: true, method: `gmail-${port}` };
-  } catch (err) {
-    console.log(`[Gmail:${port}] Failed: ${err.code}`);
-    return null;
-  }
-}
-
+/**
+ * Fallback: Send via SendGrid HTTPS API
+ */
 async function sendViaSendGrid({ to, subject, html }) {
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) return { success: false, error: 'No email method available' };
@@ -89,26 +103,9 @@ async function sendViaSendGrid({ to, subject, html }) {
       });
     });
     req.on('error', (e) => resolve({ success: false, error: e.message }));
-    req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout' }); });
     req.write(data);
     req.end();
   });
-}
-
-async function sendMail({ to, subject, html }) {
-  if (!to) return { success: false, error: 'No recipient' };
-
-  // Try port 587 first (STARTTLS, most likely to be allowed)
-  let result = await trySendGmail({ to, subject, html }, 587, false);
-  if (result) return result;
-
-  // Try port 465 (SSL)
-  result = await trySendGmail({ to, subject, html }, 465, true);
-  if (result) return result;
-
-  // Fallback to SendGrid
-  console.log('[Mail] Gmail failed, trying SendGrid...');
-  return await sendViaSendGrid({ to, subject, html });
 }
 
 module.exports = { sendMail };
