@@ -124,8 +124,56 @@ async function loadParentDashboard() {
       `).join('');
     };
 
-    document.getElementById('fullScheduleList').innerHTML = renderList(appointments, 'No vaccination appointments have been scheduled yet.');
-    document.getElementById('completedVaccinationsList').innerHTML = renderRecords(completedRecords, 'No completed vaccinations recorded yet.');
+    // Load age-based vaccine schedule for each child
+    if (child && child._id) {
+      try {
+        const scheduleResp = await fetch(`${resolveApiBaseUrl()}/schedule/${child._id}`, { headers: getParentAuthHeaders() });
+        if (scheduleResp.ok) {
+          const scheduleResult = await scheduleResp.json();
+          const scheduleData = scheduleResult.data;
+          if (scheduleData && scheduleData.schedule) {
+            const sched = scheduleData.schedule;
+            // Replace the full schedule list with age-based recommendations
+            const dueHtml = sched.due.length
+              ? sched.due.map((v) => `
+                <div class="schedule-item overdue">
+                  <h6 class="mb-1">${v.vaccineName} — Dose ${v.doseNumber}</h6>
+                  <p class="mb-0 text-muted">${v.description} <span class="badge bg-danger">Due Now</span></p>
+                </div>`).join('')
+              : '<div class="alert alert-success mb-0">All vaccines are up to date!</div>';
+
+            const upcomingHtml = sched.upcoming.length
+              ? sched.upcoming.map((v) => `
+                <div class="schedule-item">
+                  <h6 class="mb-1">${v.vaccineName} — Dose ${v.doseNumber}</h6>
+                  <p class="mb-0 text-muted">${v.description} <span class="badge bg-warning text-dark">Due ${new Date(v.dueDate).toLocaleDateString()}</span></p>
+                </div>`).join('')
+              : '<div class="alert alert-info mb-0">No upcoming vaccines scheduled.</div>';
+
+            const completedHtml = sched.completed.length
+              ? sched.completed.map((v) => `
+                <div class="schedule-item completed">
+                  <h6 class="mb-1">${v.vaccineName} — Dose ${v.doseNumber}</h6>
+                  <p class="mb-0 text-muted">${v.description} <span class="badge bg-success">Completed</span></p>
+                </div>`).join('')
+              : '<div class="alert alert-info mb-0">No completed vaccines yet.</div>';
+
+            document.getElementById('fullScheduleList').innerHTML = `
+              <h6 class="text-danger">Due Vaccines</h6>${dueHtml}
+              <hr><h6 class="text-warning">Upcoming Vaccines</h6>${upcomingHtml}
+            `;
+            document.getElementById('completedVaccinationsList').innerHTML = completedHtml;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load schedule:', e);
+      }
+    }
+
+    if (!document.getElementById('fullScheduleList').innerHTML.includes('Due Vaccines')) {
+      document.getElementById('fullScheduleList').innerHTML = renderList(appointments, 'No vaccination appointments have been scheduled yet.');
+      document.getElementById('completedVaccinationsList').innerHTML = renderRecords(completedRecords, 'No completed vaccinations recorded yet.');
+    }
     document.getElementById('upcomingVaccinationsList').innerHTML = renderList(upcomingAppointments, 'No upcoming vaccinations in the next 30 days.');
     document.getElementById('overdueVaccinationsList').innerHTML = renderList(overdueAppointments, 'No overdue vaccinations at the moment.');
     document.getElementById('diseaseCards').innerHTML = [
