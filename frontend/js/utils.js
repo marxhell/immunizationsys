@@ -47,7 +47,7 @@ function buildSidebar() {
   const visibleItems = role === 'admin'
     ? allItems
     : ['nurse', 'staff'].includes(role)
-      ? allItems.filter((item) => ['Dashboard', 'Children', 'Vaccinations', 'Appointments'].includes(item.label))
+      ? allItems.filter((item) => ['Dashboard', 'Children', 'Vaccinations', 'Schedule', 'Appointments'].includes(item.label))
       : role === 'pharmacist'
         ? allItems.filter((item) => ['Dashboard', 'Inventory'].includes(item.label))
         : role === 'records_officer'
