@@ -65,8 +65,8 @@ async function loadParentDashboard() {
 
     document.getElementById('parentStats').innerHTML = `
       <div class="col-md-4"><div class="stat-card"><div class="stat-number">${children.length}</div><div class="stat-label">Children</div></div></div>
-      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming</div></div></div>
-      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Overdue</div></div></div>
+      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming Visits</div></div></div>
+      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Missed Visits</div></div></div>
     `;
 
     document.getElementById('childrenList').innerHTML = children.map((item) => `

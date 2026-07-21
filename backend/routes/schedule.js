@@ -7,18 +7,28 @@ const { getRecommendedVaccines, KENYA_VACCINE_SCHEDULE } = require('../utils/vac
 const router = express.Router();
 
 /**
+ * Load schedule data for a child by ID
+ */
+async function loadScheduleForChild(childId) {
+  const child = await Child.findById(childId);
+  if (!child) return null;
+  const records = await VaccinationRecord.find({ childId: child._id });
+  const schedule = getRecommendedVaccines(child.dateOfBirth, records);
+  return { child, schedule };
+}
+
+/**
  * GET /api/schedule/:childId
  * Returns the full vaccination schedule for a specific child based on their DOB
+ * Accessible by both staff (JWT auth) and parents (child._id based)
  */
-router.get('/:childId', protect, async (req, res) => {
+router.get('/:childId', async (req, res) => {
   try {
-    const child = await Child.findById(req.params.childId);
-    if (!child) {
+    const childData = await loadScheduleForChild(req.params.childId);
+    if (!childData) {
       return res.status(404).json({ success: false, message: 'Child not found' });
     }
-
-    const records = await VaccinationRecord.find({ childId: child._id });
-    const schedule = getRecommendedVaccines(child.dateOfBirth, records);
+    const { child, schedule } = childData;
 
     res.json({
       success: true,
