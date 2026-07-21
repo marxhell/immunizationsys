@@ -26,4 +26,4 @@ services:
       - key: EMAIL_FROM
         value: Child Vaccination System
       - key: FRONTEND_URL
-        value: https://immunization-system.netlify.app
+        value: https://district-vaccination-sys.netlify.app

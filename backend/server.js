@@ -21,7 +21,7 @@ const frontendUrl = frontendUrlRaw.replace(/\/$/, '');
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
-  'https://immunization-system.netlify.app',
+  'https://district-vaccination-sys.netlify.app',
   frontendUrl,
 ].filter(Boolean);
 
