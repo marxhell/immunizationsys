@@ -1,42 +1,61 @@
 /**
  * Email Utility
- * Uses Brevo (formerly Sendinblue) HTTPS API — works on all cloud platforms.
- * No SMTP ports needed. Brevo free tier: 300 emails/day.
+ * Uses EmailJS API (HTTPS) to send emails — works on all platforms including Render.
+ * No SMTP needed. Free tier: 200 emails/month.
+ *
+ * Setup:
+ * 1. Create template at https://www.emailjs.com with variables: to_name, child_name, appointment_date
+ * 2. Add these env vars to Render:
+ *    EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID
  */
 
 const https = require('https');
 
 async function sendMail({ to, subject, html }) {
-  if (!to) return { success: false, error: 'No recipient' };
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY || 'g2De6HyCLxXs5H_Cu';
+  const serviceId = process.env.EMAILJS_SERVICE_ID || 'service_h08feqy';
+  const templateId = process.env.EMAILJS_TEMPLATE_ID || 'template_coqj5l9';
 
-  const apiKey = process.env.BREVO_API_KEY;
-
-  if (!apiKey) {
-    // Fallback to SendGrid if available
-    if (process.env.SENDGRID_API_KEY) {
-      return sendViaSendGrid({ to, subject, html });
-    }
-    return { success: false, error: 'Set BREVO_API_KEY in Render env vars. Get it from https://app.brevo.com/settings/keys/api' };
+  if (!publicKey || !serviceId || !templateId) {
+    return { success: false, error: 'EmailJS not configured' };
   }
 
-  const fromEmail = process.env.EMAIL_USER || 'ogarishelton@gmail.com';
-  const fromName = process.env.EMAIL_FROM || 'Child Vaccination System';
+  // Extract child name and date from the HTML (simple parsing)
+  let toName = 'Parent';
+  let childName = 'your child';
+  let appointmentDate = 'soon';
+
+  // Try to extract from HTML content
+  const nameMatch = html.match(/Hello ([^<,]+)/i);
+  if (nameMatch) toName = nameMatch[1].trim();
+
+  const childMatch = html.match(/for ([^<]+) has/i) || html.match(/([^<]+) has a vaccination/i);
+  if (childMatch) childName = childMatch[1].trim();
+
+  const dateMatch = html.match(/on ([^<.]+)/i);
+  if (dateMatch) appointmentDate = dateMatch[1].trim();
 
   const data = JSON.stringify({
-    sender: { email: fromEmail, name: fromName },
-    to: [{ email: to }],
-    subject: subject,
-    htmlContent: html,
+    service_id: serviceId,
+    template_id: templateId,
+    user_id: publicKey,
+    template_params: {
+      to_name: toName,
+      to_email: to,
+      child_name: childName,
+      appointment_date: appointmentDate,
+      subject: subject,
+      message: html.replace(/<[^>]*>/g, '').substring(0, 500),
+    },
   });
 
   return new Promise((resolve) => {
     const req = https.request(
       {
-        hostname: 'api.brevo.com',
-        path: '/v3/smtp/email',
+        hostname: 'api.emailjs.com',
+        path: '/api/v1.0/email/send',
         method: 'POST',
         headers: {
-          'api-key': apiKey,
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(data),
         },
@@ -47,62 +66,23 @@ async function sendMail({ to, subject, html }) {
         res.on('data', (c) => (body += c));
         res.on('end', () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.log(`[Brevo] Sent to ${to}: ${body}`);
-            resolve({ success: true, method: 'brevo', messageId: body });
+            console.log(`[EmailJS] Sent to ${to}: ${body}`);
+            resolve({ success: true, method: 'emailjs' });
           } else {
-            console.error(`[Brevo] Error ${res.statusCode}: ${body}`);
-            resolve({ success: false, error: `Brevo ${res.statusCode}: ${body}` });
+            console.error(`[EmailJS] Error ${res.statusCode}: ${body}`);
+            resolve({ success: false, error: `EmailJS ${res.statusCode}: ${body}` });
           }
         });
       }
     );
     req.on('error', (e) => {
-      console.error(`[Brevo] Network error: ${e.message}`);
+      console.error(`[EmailJS] Network error: ${e.message}`);
       resolve({ success: false, error: e.message });
     });
     req.on('timeout', () => {
       req.destroy();
-      resolve({ success: false, error: 'Brevo API timeout' });
+      resolve({ success: false, error: 'EmailJS timeout' });
     });
-    req.write(data);
-    req.end();
-  });
-}
-
-/**
- * Fallback: Send via SendGrid HTTPS API
- */
-async function sendViaSendGrid({ to, subject, html }) {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) return { success: false, error: 'No email method available' };
-
-  const data = JSON.stringify({
-    personalizations: [{ to: [{ email: to }] }],
-    from: { email: process.env.EMAIL_USER || 'ogarishelton@gmail.com', name: process.env.EMAIL_FROM || 'Child Vaccination System' },
-    subject,
-    content: [{ type: 'text/html', value: html }],
-  });
-
-  return new Promise((resolve) => {
-    const req = https.request({
-      hostname: 'api.sendgrid.com',
-      path: '/v3/mail/send',
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-      timeout: 15000,
-    }, (res) => {
-      let body = '';
-      res.on('data', (c) => (body += c));
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log(`[SendGrid] Sent to ${to}`);
-          resolve({ success: true, method: 'sendgrid' });
-        } else {
-          resolve({ success: false, error: `SendGrid ${res.statusCode}` });
-        }
-      });
-    });
-    req.on('error', (e) => resolve({ success: false, error: e.message }));
     req.write(data);
     req.end();
   });
