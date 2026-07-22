@@ -6,13 +6,14 @@
  * Setup:
  * 1. Create template at https://www.emailjs.com with variables: to_name, child_name, appointment_date
  * 2. Add these env vars to Render:
- *    EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID
+ *    EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_PRIVATE_KEY
  */
 
 const https = require('https');
 
 async function sendMail({ to, subject, html }) {
   const publicKey = process.env.EMAILJS_PUBLIC_KEY || 'g2De6HyCLxXs5H_Cu';
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY || 'eK7XQvUUONGBweuZHOZVK';
   const serviceId = process.env.EMAILJS_SERVICE_ID || 'service_h08feqy';
   const templateId = process.env.EMAILJS_TEMPLATE_ID || 'template_coqj5l9';
 
@@ -39,6 +40,7 @@ async function sendMail({ to, subject, html }) {
     service_id: serviceId,
     template_id: templateId,
     user_id: publicKey,
+    accessToken: privateKey,
     template_params: {
       to_name: toName,
       to_email: to,
