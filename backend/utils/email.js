@@ -42,12 +42,11 @@ async function sendMail({ to, subject, html }) {
     user_id: publicKey,
     accessToken: privateKey,
     template_params: {
-      to_name: toName,
+      guardian_name: toName,
       to_email: to,
       child_name: childName,
+      vaccine: subject,
       appointment_date: appointmentDate,
-      subject: subject,
-      message: html.replace(/<[^>]*>/g, '').substring(0, 500),
     },
   });
 
