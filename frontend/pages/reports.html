@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports - Child Vaccination System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <button class="navbar-toggler-menu" onclick="toggleSidebar()" title="Toggle menu"></button>
+      <a class="navbar-brand fw-bold" href="dashboard.html">Child Vaccination System</a>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-light me-3 small" id="userDisplay"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Popup Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-logo">CV</div>
+        <h6>Child Vaccination</h6>
+      </div>
+      <button class="btn-close btn-close-white" onclick="closeSidebar()"></button>
+    </div>
+    <ul class="nav flex-column" id="sidebarMenu"></ul>
+  </nav>
+
+  <div class="container-fluid mt-3">
+    <div class="row">
+      <!-- Main Content (full width) -->
+      <main class="col-12 p-4">
+        <h2 class="mb-4">Reports & Analytics</h2>
+
+        <!-- Date Filter -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate">
+          </div>
+          <div class="col-md-4 d-flex align-items-end gap-2">
+            <button class="btn btn-primary w-50" onclick="applyDateFilter()">Generate Reports</button>
+            <button class="btn btn-outline-primary w-50" onclick="downloadCurrentReportPdf()">Download Current PDF</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4 flex-wrap" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#immunizationTab">Immunization</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#coverageTab">Coverage</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#overdueTab">Overdue</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#stockTab">Stock</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usageTab">Usage</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#appointmentTab">Appointments</button>
+          </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+          <!-- Immunization Report -->
+          <div class="tab-pane fade show active" id="immunizationTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Monthly Immunization Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="immunizationReport"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coverage Report -->
+          <div class="tab-pane fade" id="coverageTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Vaccination Coverage Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="coverageReport"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overdue Report -->
+          <div class="tab-pane fade" id="overdueTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Overdue Vaccinations Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="overdueReport"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock Report -->
+          <div class="tab-pane fade" id="stockTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Vaccine Stock Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="stockReport"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usage Report -->
+          <div class="tab-pane fade" id="usageTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Vaccine Usage Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="usageReport"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appointment Report -->
+          <div class="tab-pane fade" id="appointmentTab">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Appointment Report</h5>
+              </div>
+              <div class="card-body">
+                <div id="appointmentReport"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script src="../js/reports.js"></script>
+</body>
+</html>

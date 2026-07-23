@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Dashboard - Child Vaccination System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    :root {
+      --parent-primary: #495057;
+      --parent-secondary: #6c757d;
+      --parent-gradient: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+    }
+    .parent-nav {
+      background: #212529 !important;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      color: #212529;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+    .stat-card .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #212529;
+    }
+    .stat-card .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+      opacity: 0.9;
+    }
+    .stat-card.outline {
+      background: white;
+      color: #333;
+      border: 2px solid #495057;
+    }
+    .stat-card.outline .stat-number {
+      color: #495057;
+    }
+    .stat-card.warning {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+    }
+    .stat-card.info {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+    }
+    .disease-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      height: 100%;
+      overflow: hidden;
+    }
+    .disease-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .disease-card .card-header {
+      background: #f8f9fa;
+      color: #212529;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-bottom: 2px solid #dee2e6;
+    }
+    .vaccine-badge {
+      background: #e9ecef;
+      color: #495057;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .section-title {
+      border-left: 4px solid #495057;
+      padding-left: 15px;
+      margin-bottom: 20px;
+    }
+    .child-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: #fff;
+      transition: all 0.3s ease;
+    }
+    .child-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .child-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #212529;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: bold;
+    }
+    .welcome-banner {
+      background: #212529;
+      border-radius: 8px;
+      padding: 25px;
+      color: white;
+      margin-bottom: 25px;
+    }
+    .welcome-banner h2 {
+      font-weight: 700;
+    }
+    .sidebar {
+      background-color: #1a2a3a;
+    }
+    .nav-link.active {
+      background-color: #495057 !important;
+      border-left-color: #6c757d !important;
+    }
+    .nav-link:hover {
+      border-left-color: #495057 !important;
+    }
+    .btn-parent {
+      background: #212529;
+      border: none;
+      color: white;
+    }
+    .btn-parent:hover {
+      background: #495057;
+      color: white;
+    }
+    .tab-btn {
+      border: 2px solid #495057;
+      color: #495057;
+      background: white;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: #495057;
+      color: white;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+    .schedule-item {
+      border-left: 4px solid #495057;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .schedule-item.overdue {
+      border-left-color: #dc3545;
+      background: #fff5f5;
+    }
+    .schedule-item.completed {
+      border-left-color: #28a745;
+      background: #f0fdf4;
+    }
+    .card-header-bw {
+      background: #f8f9fa !important;
+      border-bottom: 2px solid #dee2e6;
+      color: #212529 !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark parent-nav">
+    <div class="container-fluid">
+      <button class="navbar-toggler-menu" onclick="toggleSidebar()" title="Toggle menu"></button>
+      <a class="navbar-brand fw-bold" href="#">
+         Parent Portal
+      </a>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-light me-3 small" id="parentNameDisplay"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Popup Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-logo">CV</div>
+        <h6>PARENT PORTAL</h6>
+      </div>
+      <button class="btn-close btn-close-white" onclick="closeSidebar()"></button>
+    </div>
+    <ul class="nav flex-column" id="sidebarMenu">
+      <li class="nav-item">
+        <a class="nav-link active" href="#" onclick="switchSection('dashboard', this); closeSidebar();">Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="switchSection('children', this); closeSidebar();">My Children</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="switchSection('schedule', this); closeSidebar();">Vaccination Schedule</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="switchSection('diseases', this); closeSidebar();">Disease Information</a>
+      </li>
+      <hr>
+      <li class="nav-item">
+        <a class="nav-link text-danger" href="#" onclick="handleParentLogout()">Logout</a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container-fluid mt-3">
+    <div class="row">
+      <main class="col-12 p-4">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner" id="welcomeBanner">
+          <h2 id="welcomeMessage">Welcome, Parent!</h2>
+          <p class="mb-0" id="welcomeSubtext">Monitor your child's vaccination journey at Kenyenya District Hospital</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="mb-4 d-flex gap-2 flex-wrap">
+          <button class="tab-btn active" onclick="switchSection('dashboard', this)">Dashboard</button>
+          <button class="tab-btn" onclick="switchSection('children', this)">My Children</button>
+          <button class="tab-btn" onclick="switchSection('schedule', this)">Schedule</button>
+          <button class="tab-btn" onclick="switchSection('diseases', this)">Disease Info</button>
+        </div>
+
+        <!-- DASHBOARD SECTION -->
+        <div id="section-dashboard" class="content-section active">
+          <h4 class="section-title">Dashboard Overview</h4>
+          <div class="row" id="parentStats"></div>
+
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-bw">Upcoming Vaccinations (Next 30 Days)</div>
+                <div class="card-body" id="upcomingVaccinationsList">
+                  <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-bw">Overdue Vaccinations</div>
+                <div class="card-body" id="overdueVaccinationsList">
+                  <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY CHILDREN SECTION -->
+        <div id="section-children" class="content-section">
+          <h4 class="section-title">My Children</h4>
+          <div class="row" id="childrenList"></div>
+        </div>
+
+        <!-- SCHEDULE SECTION -->
+        <div id="section-schedule" class="content-section">
+          <h4 class="section-title">Full Vaccination Schedule</h4>
+          <div class="card mb-4">
+            <div class="card-header card-header-bw">All Scheduled Vaccinations</div>
+            <div class="card-body" id="fullScheduleList">
+              <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header card-header-bw">Completed Vaccinations</div>
+            <div class="card-body" id="completedVaccinationsList">
+              <div class="spinner-border text-secondary" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DISEASES SECTION -->
+        <div id="section-diseases" class="content-section">
+          <h4 class="section-title">Common Vaccine-Preventable Diseases</h4>
+          <p class="text-muted mb-4">Learn about the diseases that your child is protected against through vaccination.</p>
+          <div class="row" id="diseaseCards"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Child Detail Modal -->
+  <div class="modal fade" id="childDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background: #212529; color: white;">
+          <h5 class="modal-title" id="childDetailTitle">Child Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="childDetailContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/parent.js"></script>
+</body>
+</html>

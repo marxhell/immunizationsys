@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: child-immunization-api
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install --prefix backend
+    startCommand: npm start --prefix backend
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: child-immunization-system
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: Child Vaccination System
+      - key: FRONTEND_URL
+        value: https://district-vaccination-sys.netlify.app

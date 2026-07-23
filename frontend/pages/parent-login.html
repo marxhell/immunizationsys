@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Portal - Child Vaccination System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .login-container {
+      max-width: 450px;
+      width: 100%;
+    }
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      text-align: center;
+      padding: 30px 20px;
+    }
+    .card-header h3 {
+      color: white;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .card-header small {
+      color: rgba(255,255,255,0.9);
+    }
+    .parent-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      border: none;
+      font-weight: 600;
+      padding: 12px;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0d8a7e 0%, #2dd46a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(17,153,142,0.4);
+    }
+    .btn-outline-secondary {
+      border-color: #11998e;
+      color: #11998e;
+    }
+    .btn-outline-secondary:hover {
+      background: #11998e;
+      color: white;
+      border-color: #11998e;
+    }
+    .info-box {
+      background: #f0fdf4;
+      border-left: 4px solid #11998e;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .info-box p {
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+    .error-alert {
+      display: none;
+    }
+    .back-link {
+      color: white;
+      text-decoration: none;
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+    .back-link:hover {
+      opacity: 1;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="card">
+      <div class="card-header">
+        <div class="parent-icon"></div>
+        <h3>Parent Portal</h3>
+        <small>View your child's vaccination records</small>
+      </div>
+      <div class="card-body p-4">
+        <!-- Error Alert -->
+        <div id="errorAlert" class="alert alert-danger error-alert" role="alert"></div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <p><strong>How to login:</strong></p>
+          <p class="mb-0">Use the <strong>Email</strong> or <strong>Phone Number</strong> you provided during registration to access your portal.</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="parentLoginForm" onsubmit="handleParentLogin(event)">
+          <div class="mb-3">
+            <label for="identifier" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="identifier" required placeholder="Enter the email you registered with">
+          </div>
+          <div class="mb-3">
+            <label for="phoneNumber" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phoneNumber" required placeholder="e.g. 0712345678">
+          </div>
+
+          <!-- Login Button -->
+          <button type="submit" class="btn btn-primary w-100" id="loginBtn">Access My Portal
+          </button>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+          <p class="mb-2 small text-muted">Are you a hospital staff member?</p>
+          <a href="login.html" class="btn btn-outline-secondary btn-sm w-100">Staff Login</a>
+        </div>
+      </div>
+      <div class="card-footer bg-light text-center text-muted small py-3">
+        <p class="mb-0">Kenyenya District Hospital | Child Vaccination System</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Determine API base URL based on environment
+    const getApiBaseUrl = () => {
+      const isDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+      
+      if (isDevelopment) {
+        return 'http://localhost:5000/api';
+      }
+      
+      // Production: use Render backend
+      return 'https://immunizationsys.onrender.com/api';
+    };
+
+    const API_BASE_URL = getApiBaseUrl();
+
+    async function handleParentLogin(event) {
+      event.preventDefault();
+
+      const identifier = document.getElementById('identifier').value.trim().toLowerCase();
+      const phoneNumber = document.getElementById('phoneNumber').value.trim();
+      const errorAlert = document.getElementById('errorAlert');
+      const loginBtn = document.getElementById('loginBtn');
+
+      // Hide error alert and disable button to prevent double submit
+      errorAlert.style.display = 'none';
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Verifying...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/parent/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ identifier, phoneNumber })
+        });
+
+        let result;
+        const responseText = await response.text();
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          result = { message: responseText };
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || 'Login failed');
+        }
+
+        // Save token and guardian data
+        localStorage.setItem('parentToken', result.data.token);
+        localStorage.setItem('parentUser', JSON.stringify(result.data.guardian));
+
+        // Redirect to parent dashboard
+        window.location.href = 'parent-dashboard.html';
+      } catch (error) {
+        console.error('Parent login error:', error);
+        errorAlert.textContent = error.message || 'Login failed. Please check your credentials and try again.';
+        errorAlert.style.display = 'block';
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Access My Portal';
+      }
+    }
+  </script>
+</body>
+</html>
