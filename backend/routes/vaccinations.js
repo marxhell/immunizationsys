@@ -1,5 +1,6 @@
 const express = require('express');
 const VaccinationRecord = require('../models/VaccinationRecord');
+const Appointment = require('../models/Appointment');
 const Child = require('../models/Child');
 const VaccineBatch = require('../models/VaccineBatch');
 const { protect } = require('../middleware/auth');
@@ -44,6 +45,17 @@ router.post('/', protect, async (req, res) => {
       notes,
       status: 'administered',
     });
+
+    // Update matching appointment to "completed"
+    try {
+      await Appointment.findOneAndUpdate(
+        { childId: childId, vaccineName: vaccineName, status: 'scheduled' },
+        { status: 'completed' },
+        { sort: { appointmentDate: -1 } }
+      );
+    } catch (apptErr) {
+      console.warn('Could not update appointment status:', apptErr.message);
+    }
 
     res.status(201).json({ success: true, data: record });
   } catch (error) {
