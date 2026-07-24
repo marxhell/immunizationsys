@@ -47,27 +47,35 @@
   </style>
 </head>
 <body>
-  <div id="app" class="d-flex">
-    <!-- Sidebar -->
-    <nav id="sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <h5 class="mb-1">Child Vaccination</h5>
-        <small>Kenyenya District Hospital</small>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <button class="navbar-toggler-menu" onclick="toggleSidebar()" title="Toggle menu"></button>
+      <a class="navbar-brand fw-bold" href="dashboard.html">Child Vaccination System</a>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-light me-3 small" id="userDisplay"></span>
       </div>
-      <ul id="sidebarMenu" class="nav flex-column"></ul>
-    </nav>
+    </div>
+  </nav>
 
-    <!-- Overlay for mobile -->
-    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-    <!-- Main content -->
-    <div class="main-content flex-grow-1">
-      <nav class="navbar navbar-light bg-white shadow-sm mb-4 p-3 d-md-none">
-        <button class="btn btn-outline-primary" onclick="toggleSidebar()">☰ Menu</button>
-        <span id="userDisplay" class="text-muted small"></span>
-      </nav>
+  <!-- Popup Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-logo">CV</div>
+        <h6>Child Vaccination</h6>
+      </div>
+      <button class="btn-close btn-close-white" onclick="closeSidebar()"></button>
+    </div>
+    <ul class="nav flex-column" id="sidebarMenu"></ul>
+  </nav>
 
-      <div class="container-fluid">
+  <div class="container-fluid mt-3">
+    <div class="row">
+      <main class="col-12 p-4">
         <h2 class="mb-4">Vaccination Schedule</h2>
 
         <!-- Child Selector -->
@@ -155,7 +163,7 @@
             <div class="alert alert-secondary mb-0">Loading reference schedule...</div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 
