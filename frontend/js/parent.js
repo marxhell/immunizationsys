@@ -64,9 +64,9 @@ async function loadParentDashboard() {
     const completedRecords = records.filter((record) => record.status === 'administered');
 
     document.getElementById('parentStats').innerHTML = `
-      <div class="col-md-4"><div class="stat-card"><div class="stat-number">${children.length}</div><div class="stat-label">Children</div></div>
-      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming Visits</div></div>
-      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Missed Visits</div></div>
+      <div class="col-md-4"><div class="stat-card"><div class="stat-number">${children.length}</div><div class="stat-label">Children</div></div></div>
+      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming Visits</div></div></div>
+      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Missed Visits</div></div></div>
     `;
 
     document.getElementById('childrenList').innerHTML = children.map((item) => `
@@ -78,10 +78,12 @@ async function loadParentDashboard() {
               <h5 class="mb-1">${item.firstName} ${item.lastName}</h5>
               <p class="mb-0 text-muted">DOB: ${new Date(item.dateOfBirth).toLocaleDateString()}</p>
             </div>
+          </div>
           <p class="mb-1"><strong>Patient ID:</strong> ${item.patientId}</p>
           <p class="mb-1"><strong>Guardian:</strong> ${item.guardianName || '—'}</p>
           <button class="btn btn-parent btn-sm mt-2" onclick="viewParentChild('${item._id}')">View Details</button>
         </div>
+      </div>
     `).join('');
 
     // Helper: render a list with a maximum limit and "View All" link
@@ -104,6 +106,7 @@ async function loadParentDashboard() {
             </div>
             <span class="vaccine-badge">${item.status === 'scheduled' ? 'Upcoming' : item.status}</span>
           </div>
+        </div>
       `).join('');
 
       if (hasMore) {
@@ -131,6 +134,7 @@ async function loadParentDashboard() {
             </div>
             <span class="vaccine-badge">Completed</span>
           </div>
+        </div>
       `).join('');
 
       if (hasMore) {
@@ -206,6 +210,7 @@ async function loadParentDashboard() {
             <p class="mb-2">${desc}</p>
             <span class="vaccine-badge">${vaccine}</span>
           </div>
+        </div>
       </div>
     `).join('');
   } catch (error) {
