@@ -53,16 +53,13 @@ async function loadParentDashboard() {
     const children = child ? [child] : [];
 
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const upcomingAppointments = appointments.filter((appointment) => {
       const date = new Date(appointment.appointmentDate);
-      const apptDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      return appointment.status === 'scheduled' && apptDate >= todayStart && (apptDate - todayStart) <= 30 * 24 * 60 * 60 * 1000;
+      return appointment.status === 'scheduled' && date >= now && (date - now) <= 30 * 24 * 60 * 60 * 1000;
     });
     const overdueAppointments = appointments.filter((appointment) => {
       const date = new Date(appointment.appointmentDate);
-      const apptDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      return appointment.status === 'scheduled' && apptDate < todayStart;
+      return appointment.status === 'scheduled' && date < now;
     });
     const completedRecords = records.filter((record) => record.status === 'administered');
 
@@ -97,23 +94,17 @@ async function loadParentDashboard() {
       const remaining = items.length - maxItems;
       const hasMore = remaining > 0;
 
-      let html = displayItems.map((item) => {
-        // Check if this appointment should show as overdue (scheduled + past date)
-        const apptDate = new Date(item.appointmentDate);
-        const apptDay = new Date(apptDate.getFullYear(), apptDate.getMonth(), apptDate.getDate());
-        const isPast = apptDay < todayStart;
-        const isCompleted = item.status === 'completed';
-        return `
-        <div class="schedule-item ${isCompleted ? 'completed' : ''} ${item.status === 'scheduled' && isPast ? 'overdue' : ''}">
+      let html = displayItems.map((item) => `
+        <div class="schedule-item ${item.status === 'completed' ? 'completed' : ''} ${item.status === 'scheduled' && new Date(item.appointmentDate) < now ? 'overdue' : ''}">
           <div class="d-flex justify-content-between align-items-start gap-2">
             <div>
               <h6 class="mb-1">${item.vaccineName || item.vaccineName || 'Vaccination'}</h6>
               <p class="mb-1 text-muted">${new Date(item.appointmentDate).toLocaleDateString()} at ${item.appointmentTime || 'TBD'}</p>
               <small class="text-muted">Status: ${item.status}</small>
             </div>
-            <span class="vaccine-badge">${isCompleted ? 'Completed' : item.status === 'scheduled' ? (isPast ? 'Overdue' : 'Upcoming') : item.status}</span>
+            <span class="vaccine-badge">${item.status === 'scheduled' ? 'Upcoming' : item.status}</span>
           </div>
-      `}).join('');
+      `).join('');
 
       if (hasMore) {
         html += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more</small></div>`;
