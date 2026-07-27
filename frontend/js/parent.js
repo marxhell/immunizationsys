@@ -53,20 +53,23 @@ async function loadParentDashboard() {
     const children = child ? [child] : [];
 
     const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const upcomingAppointments = appointments.filter((appointment) => {
       const date = new Date(appointment.appointmentDate);
-      return appointment.status === 'scheduled' && date >= now && (date - now) <= 30 * 24 * 60 * 60 * 1000;
+      const apptDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return appointment.status === 'scheduled' && apptDate >= todayStart && (apptDate - todayStart) <= 30 * 24 * 60 * 60 * 1000;
     });
     const overdueAppointments = appointments.filter((appointment) => {
       const date = new Date(appointment.appointmentDate);
-      return appointment.status === 'scheduled' && date < now;
+      const apptDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return appointment.status === 'scheduled' && apptDate < todayStart;
     });
     const completedRecords = records.filter((record) => record.status === 'administered');
 
     document.getElementById('parentStats').innerHTML = `
-      <div class="col-md-4"><div class="stat-card"><div class="stat-number">${children.length}</div><div class="stat-label">Children</div></div></div>
-      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming Visits</div></div></div>
-      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Missed Visits</div></div></div>
+      <div class="col-md-4"><div class="stat-card"><div class="stat-number">${children.length}</div><div class="stat-label">Children</div></div>
+      <div class="col-md-4"><div class="stat-card outline"><div class="stat-number">${upcomingAppointments.length}</div><div class="stat-label">Upcoming Visits</div></div>
+      <div class="col-md-4"><div class="stat-card warning"><div class="stat-number">${overdueAppointments.length}</div><div class="stat-label">Missed Visits</div></div>
     `;
 
     document.getElementById('childrenList').innerHTML = children.map((item) => `
@@ -78,12 +81,10 @@ async function loadParentDashboard() {
               <h5 class="mb-1">${item.firstName} ${item.lastName}</h5>
               <p class="mb-0 text-muted">DOB: ${new Date(item.dateOfBirth).toLocaleDateString()}</p>
             </div>
-          </div>
           <p class="mb-1"><strong>Patient ID:</strong> ${item.patientId}</p>
           <p class="mb-1"><strong>Guardian:</strong> ${item.guardianName || '—'}</p>
           <button class="btn btn-parent btn-sm mt-2" onclick="viewParentChild('${item._id}')">View Details</button>
         </div>
-      </div>
     `).join('');
 
     // Helper: render a list with a maximum limit and "View All" link
@@ -96,18 +97,23 @@ async function loadParentDashboard() {
       const remaining = items.length - maxItems;
       const hasMore = remaining > 0;
 
-      let html = displayItems.map((item) => `
-        <div class="schedule-item ${item.status === 'completed' ? 'completed' : ''} ${item.status === 'scheduled' && new Date(item.appointmentDate) < now ? 'overdue' : ''}">
+      let html = displayItems.map((item) => {
+        // Check if this appointment should show as overdue (scheduled + past date)
+        const apptDate = new Date(item.appointmentDate);
+        const apptDay = new Date(apptDate.getFullYear(), apptDate.getMonth(), apptDate.getDate());
+        const isPast = apptDay < todayStart;
+        const isCompleted = item.status === 'completed';
+        return `
+        <div class="schedule-item ${isCompleted ? 'completed' : ''} ${item.status === 'scheduled' && isPast ? 'overdue' : ''}">
           <div class="d-flex justify-content-between align-items-start gap-2">
             <div>
               <h6 class="mb-1">${item.vaccineName || item.vaccineName || 'Vaccination'}</h6>
               <p class="mb-1 text-muted">${new Date(item.appointmentDate).toLocaleDateString()} at ${item.appointmentTime || 'TBD'}</p>
               <small class="text-muted">Status: ${item.status}</small>
             </div>
-            <span class="vaccine-badge">${item.status === 'scheduled' ? 'Upcoming' : item.status}</span>
+            <span class="vaccine-badge">${isCompleted ? 'Completed' : item.status === 'scheduled' ? (isPast ? 'Overdue' : 'Upcoming') : item.status}</span>
           </div>
-        </div>
-      `).join('');
+      `}).join('');
 
       if (hasMore) {
         html += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more</small></div>`;
@@ -134,7 +140,6 @@ async function loadParentDashboard() {
             </div>
             <span class="vaccine-badge">Completed</span>
           </div>
-        </div>
       `).join('');
 
       if (hasMore) {
@@ -210,11 +215,10 @@ async function loadParentDashboard() {
             <p class="mb-2">${desc}</p>
             <span class="vaccine-badge">${vaccine}</span>
           </div>
-        </div>
       </div>
     `).join('');
   } catch (error) {
-    document.getElementById('parentStats').innerHTML = `<div class="col-12"><div class="alert alert-danger">${error.message}</div></div>`;
+    document.getElementById('parentStats').innerHTML = `<div class="col-12"><div class="alert alert-danger">${error.message}</div>`;
   }
 }
 
