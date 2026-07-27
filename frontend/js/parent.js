@@ -86,12 +86,17 @@ async function loadParentDashboard() {
       </div>
     `).join('');
 
-    const renderList = (items, emptyMessage) => {
+    // Helper: render a list with a maximum limit and "View All" link
+    const renderList = (items, emptyMessage, maxItems = 10) => {
       if (!items.length) {
         return `<div class="alert alert-info mb-0">${emptyMessage}</div>`;
       }
 
-      return items.map((item) => `
+      const displayItems = items.slice(0, maxItems);
+      const remaining = items.length - maxItems;
+      const hasMore = remaining > 0;
+
+      let html = displayItems.map((item) => `
         <div class="schedule-item ${item.status === 'completed' ? 'completed' : ''} ${item.status === 'scheduled' && new Date(item.appointmentDate) < now ? 'overdue' : ''}">
           <div class="d-flex justify-content-between align-items-start gap-2">
             <div>
@@ -103,14 +108,23 @@ async function loadParentDashboard() {
           </div>
         </div>
       `).join('');
+
+      if (hasMore) {
+        html += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more</small></div>`;
+      }
+      return html;
     };
 
-    const renderRecords = (items, emptyMessage) => {
+    const renderRecords = (items, emptyMessage, maxItems = 10) => {
       if (!items.length) {
         return `<div class="alert alert-info mb-0">${emptyMessage}</div>`;
       }
 
-      return items.map((item) => `
+      const displayItems = items.slice(0, maxItems);
+      const remaining = items.length - maxItems;
+      const hasMore = remaining > 0;
+
+      let html = displayItems.map((item) => `
         <div class="schedule-item completed">
           <div class="d-flex justify-content-between align-items-start gap-2">
             <div>
@@ -122,6 +136,11 @@ async function loadParentDashboard() {
           </div>
         </div>
       `).join('');
+
+      if (hasMore) {
+        html += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more records</small></div>`;
+      }
+      return html;
     };
 
     // Load age-based vaccine schedule for each child
