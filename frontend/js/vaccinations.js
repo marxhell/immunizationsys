@@ -1,7 +1,8 @@
 async function loadVaccinations() {
+  const completedList = document.getElementById('completedList');
   const upcomingList = document.getElementById('upcomingList');
   const overdueList = document.getElementById('overdueList');
-  if (!upcomingList || !overdueList) return;
+  if (!completedList || !upcomingList || !overdueList) return;
 
   try {
     const childrenResp = await fetch(`${API_BASE_URL}/children`, { headers: getAuthHeaders() });
@@ -22,20 +23,28 @@ async function loadVaccinations() {
 
     const records = result.data || [];
     const today = new Date();
-    const upcoming = records.filter((r) => new Date(r.administrationDate) > today);
-    const overdue = records.filter((r) => new Date(r.administrationDate) < today);
+    // Normalize today to start of day for proper comparison
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    renderVaccinationList(upcomingList, upcoming, 'upcoming');
-    renderVaccinationList(overdueList, overdue, 'overdue');
+    // Categorize by status: administered → completed, otherwise by date
+    const completed = records.filter((r) => r.status === 'administered');
+    const upcoming = records.filter((r) => r.status !== 'administered' && new Date(r.administrationDate) >= todayStart);
+    const overdue = records.filter((r) => r.status !== 'administered' && new Date(r.administrationDate) < todayStart);
+
+    renderVaccinationList(completedList, completed, 'completed', 'success');
+    renderVaccinationList(upcomingList, upcoming, 'upcoming', 'primary');
+    renderVaccinationList(overdueList, overdue, 'overdue', 'danger');
   } catch (error) {
+    completedList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
     upcomingList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
     overdueList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
   }
 }
 
-function renderVaccinationList(container, items, type, maxItems = 10) {
+function renderVaccinationList(container, items, type, badgeColor = 'primary', maxItems = 10) {
   if (!items.length) {
-    container.innerHTML = '<div class="alert alert-info">No vaccinations found.</div>';
+    const emptyMsg = type === 'completed' ? 'No completed vaccinations yet.' : type === 'upcoming' ? 'No upcoming vaccinations scheduled.' : 'No overdue vaccinations.';
+    container.innerHTML = `<div class="alert alert-info">${emptyMsg}</div>`;
     return;
   }
 
@@ -43,13 +52,18 @@ function renderVaccinationList(container, items, type, maxItems = 10) {
   const remaining = items.length - maxItems;
 
   container.innerHTML = displayItems.map((item) => `
-    <div class="card mb-3">
+    <div class="card mb-3 border-${badgeColor}">
       <div class="card-body">
-        <h6>${item.childName}</h6>
-        <p class="mb-1">Vaccine: ${item.vaccineName}</p>
-        <p class="mb-1">Dose: ${item.doseNumber}</p>
-        <p class="mb-1">Date: ${formatDate(item.administrationDate)}</p>
-        <p class="mb-0">Batch: ${item.batchNumber}</p>
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h6>${item.childName}</h6>
+            <p class="mb-1">Vaccine: ${item.vaccineName}</p>
+            <p class="mb-1">Dose: ${item.doseNumber}</p>
+            <p class="mb-1">Date: ${formatDate(item.administrationDate)}</p>
+            <p class="mb-0">Batch: ${item.batchNumber}</p>
+          </div>
+          <span class="badge bg-${badgeColor}">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+        </div>
       </div>
     </div>
   `).join('');
