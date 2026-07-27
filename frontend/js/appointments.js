@@ -27,13 +27,16 @@ async function loadAppointments() {
   }
 }
 
-function renderList(container, items) {
+function renderList(container, items, maxItems = 10) {
   if (!items.length) {
     container.innerHTML = '<div class="alert alert-info">No appointments found.</div>';
     return;
   }
 
-  container.innerHTML = items.map((item) => `
+  const displayItems = items.slice(0, maxItems);
+  const remaining = items.length - maxItems;
+
+  container.innerHTML = displayItems.map((item) => `
     <div class="card mb-3">
       <div class="card-body">
         <h6>${item.childName || 'Child'}</h6>
@@ -43,6 +46,10 @@ function renderList(container, items) {
       </div>
     </div>
   `).join('');
+
+  if (remaining > 0) {
+    container.innerHTML += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more appointments</small></div>`;
+  }
 }
 
 async function handleCreateAppointment(event) {

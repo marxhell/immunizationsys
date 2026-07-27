@@ -20,7 +20,11 @@ async function loadChildren() {
       return;
     }
 
-    list.innerHTML = result.data.map((child) => {
+    const maxItems = 10;
+    const displayChildren = result.data.slice(0, maxItems);
+    const remaining = result.data.length - maxItems;
+
+    list.innerHTML = displayChildren.map((child) => {
       const childName = `${child.firstName} ${child.lastName}`.replace(/'/g, "\\'");
       return `
         <div class="card mb-3">
@@ -42,6 +46,10 @@ async function loadChildren() {
         </div>
       `;
     }).join('');
+
+    if (remaining > 0) {
+      list.innerHTML += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more children</small></div>`;
+    }
   } catch (error) {
     list.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
   }

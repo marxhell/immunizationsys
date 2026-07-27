@@ -33,13 +33,16 @@ async function loadVaccinations() {
   }
 }
 
-function renderVaccinationList(container, items, type) {
+function renderVaccinationList(container, items, type, maxItems = 10) {
   if (!items.length) {
     container.innerHTML = '<div class="alert alert-info">No vaccinations found.</div>';
     return;
   }
 
-  container.innerHTML = items.map((item) => `
+  const displayItems = items.slice(0, maxItems);
+  const remaining = items.length - maxItems;
+
+  container.innerHTML = displayItems.map((item) => `
     <div class="card mb-3">
       <div class="card-body">
         <h6>${item.childName}</h6>
@@ -50,6 +53,10 @@ function renderVaccinationList(container, items, type) {
       </div>
     </div>
   `).join('');
+
+  if (remaining > 0) {
+    container.innerHTML += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more records</small></div>`;
+  }
 }
 
 async function handleRecordVaccination(event) {

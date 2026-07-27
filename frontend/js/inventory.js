@@ -32,13 +32,16 @@ async function loadInventory() {
   }
 }
 
-function renderInventoryList(container, batches) {
+function renderInventoryList(container, batches, maxItems = 10) {
   if (!batches.length) {
     container.innerHTML = '<div class="alert alert-info">No batches found.</div>';
     return;
   }
 
-  container.innerHTML = batches.map((batch) => `
+  const displayItems = batches.slice(0, maxItems);
+  const remaining = batches.length - maxItems;
+
+  container.innerHTML = displayItems.map((batch) => `
     <div class="card mb-3">
       <div class="card-body">
         <h6>${batch.vaccineName} • ${batch.batchNumber}</h6>
@@ -49,6 +52,10 @@ function renderInventoryList(container, batches) {
       </div>
     </div>
   `).join('');
+
+  if (remaining > 0) {
+    container.innerHTML += `<div class="text-center mt-2"><small class="text-muted">+ ${remaining} more batches</small></div>`;
+  }
 }
 
 async function handleAddVaccine(event) {
