@@ -17,23 +17,41 @@ async function loadVaccinations() {
       vaccineSelect.innerHTML = '<option value="">Select vaccine...</option>' + ['BCG','OPV','Pentavalent','Measles','Rotavirus','PCV','Hepatitis B'].map((name) => `<option value="${name}">${name}</option>`).join('');
     }
 
+    // Get all vaccination records (completed)
     const response = await fetch(`${API_BASE_URL}/vaccinations`, { headers: getAuthHeaders() });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'Failed to load vaccinations');
-
     const records = result.data || [];
-    const today = new Date();
-    // Normalize today to start of day for proper comparison
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-    // Categorize by status: administered → completed, otherwise by date
     const completed = records.filter((r) => r.status === 'administered');
-    const upcoming = records.filter((r) => r.status !== 'administered' && new Date(r.administrationDate) >= todayStart);
-    const overdue = records.filter((r) => r.status !== 'administered' && new Date(r.administrationDate) < todayStart);
-
     renderVaccinationList(completedList, completed, 'completed', 'success');
-    renderVaccinationList(upcomingList, upcoming, 'upcoming', 'primary');
-    renderVaccinationList(overdueList, overdue, 'overdue', 'danger');
+
+    // Get upcoming/overdue from the schedule engine for ALL children
+    const children = childrenData.data || [];
+    const allUpcoming = [];
+    const allOverdue = [];
+
+    for (const child of children) {
+      try {
+        const schedResp = await fetch(`${API_BASE_URL}/schedule/${child._id}`, { headers: getAuthHeaders() });
+        if (schedResp.ok) {
+          const schedData = await schedResp.json();
+          const schedule = schedData.data?.schedule;
+          if (schedule) {
+            schedule.due.forEach((v) => {
+              allOverdue.push({ childName: `${child.firstName} ${child.lastName}`, vaccineName: v.vaccineName, doseNumber: v.doseNumber, administrationDate: null, batchNumber: 'N/A', status: 'due', description: v.description });
+            });
+            schedule.upcoming.forEach((v) => {
+              allUpcoming.push({ childName: `${child.firstName} ${child.lastName}`, vaccineName: v.vaccineName, doseNumber: v.doseNumber, administrationDate: v.dueDate, batchNumber: 'N/A', status: 'upcoming', description: v.description });
+            });
+          }
+        }
+      } catch (e) {
+        // skip child if schedule fails
+      }
+    }
+
+    renderVaccinationList(upcomingList, allUpcoming, 'upcoming', 'primary');
+    renderVaccinationList(overdueList, allOverdue, 'overdue', 'danger');
   } catch (error) {
     completedList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
     upcomingList.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
