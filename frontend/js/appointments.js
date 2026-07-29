@@ -15,7 +15,16 @@ async function loadAppointments() {
     const today = new Date().toISOString().slice(0, 10);
 
     const todayAppointments = appointments.filter((a) => a.appointmentDate?.slice(0, 10) === today);
-    const missedAppointments = appointments.filter((a) => a.status === 'missed');
+    // Missed: explicitly missed OR past the appointment date and still scheduled
+    const missedAppointments = appointments.filter((a) => {
+      if (a.status === 'missed') return true;
+      if (a.status === 'scheduled' && a.appointmentDate) {
+        const apptDate = new Date(a.appointmentDate);
+        const todayDate = new Date();
+        return apptDate < new Date(todayDate.toISOString().slice(0, 10));
+      }
+      return false;
+    });
 
     renderList(todayList, todayAppointments);
     renderList(allList, appointments);
