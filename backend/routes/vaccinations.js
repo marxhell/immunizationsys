@@ -46,10 +46,10 @@ router.post('/', protect, async (req, res) => {
       status: 'administered',
     });
 
-    // Update matching appointment to "completed"
+    // Update matching appointment to "completed" (handles both scheduled and missed appointments)
     try {
       await Appointment.findOneAndUpdate(
-        { childId: childId, vaccineName: vaccineName, status: 'scheduled' },
+        { childId: childId, vaccineName: vaccineName, status: { $in: ['scheduled', 'missed'] } },
         { status: 'completed' },
         { sort: { appointmentDate: -1 } }
       );
