@@ -19,6 +19,25 @@ router.get('/', protect, async (req, res) => {
     const lowStock = await VaccineBatch.find({ quantity: { $lte: 50 } }).countDocuments();
     const expiringSoon = await VaccineBatch.find({ expiryDate: { $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } }).countDocuments();
 
+    // Get inventory breakdown by vaccine type
+    const batches = await VaccineBatch.find().sort({ vaccineName: 1 });
+    const inventoryBreakdown = {};
+    batches.forEach((b) => {
+      if (!inventoryBreakdown[b.vaccineName]) {
+        inventoryBreakdown[b.vaccineName] = { totalQuantity: 0, totalMinStock: 0, batchCount: 0, batches: [] };
+      }
+      inventoryBreakdown[b.vaccineName].totalQuantity += b.quantity;
+      inventoryBreakdown[b.vaccineName].totalMinStock += b.minStock;
+      inventoryBreakdown[b.vaccineName].batchCount += 1;
+      inventoryBreakdown[b.vaccineName].batches.push({
+        batchNumber: b.batchNumber,
+        quantity: b.quantity,
+        minStock: b.minStock,
+        expiryDate: b.expiryDate,
+        supplier: b.supplier,
+      });
+    });
+
     res.json({
       success: true,
       data: {
@@ -27,6 +46,7 @@ router.get('/', protect, async (req, res) => {
         upcomingAppointments,
         lowStock,
         expiringSoon,
+        inventoryBreakdown,
       },
     });
   } catch (error) {

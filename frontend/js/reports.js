@@ -21,7 +21,23 @@ async function loadReports() {
     immunizationReport.innerHTML = `<div class="alert alert-info"><strong>${data.totalVaccinations}</strong> vaccinations recorded.</div>`;
     coverageReport.innerHTML = `<div class="alert alert-success"><strong>${data.totalChildren}</strong> children registered.</div>`;
     overdueReport.innerHTML = `<div class="alert alert-warning"><strong>Overdue tracking</strong> is available from vaccination records and appointments.</div>`;
-    stockReport.innerHTML = `<div class="alert alert-secondary"><strong>${data.lowStock}</strong> batches at low stock levels.</div>`;
+
+    // Inventory breakdown by vaccine type
+    if (data.inventoryBreakdown) {
+      let stockHtml = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Vaccine</th><th>Total Stock</th><th>Min Stock</th><th>Batches</th><th>Status</th></tr></thead><tbody>';
+      const sorted = Object.entries(data.inventoryBreakdown).sort((a, b) => a[0].localeCompare(b[0]));
+      sorted.forEach(([name, info]) => {
+        const status = info.totalQuantity <= 0 ? '<span class="badge bg-danger">Out of Stock</span>' :
+          info.totalQuantity <= info.totalMinStock ? '<span class="badge bg-warning text-dark">Low Stock</span>' :
+          '<span class="badge bg-success">In Stock</span>';
+        stockHtml += `<tr><td><strong>${name}</strong></td><td>${info.totalQuantity}</td><td>${info.totalMinStock}</td><td>${info.batchCount}</td><td>${status}</td></tr>`;
+      });
+      stockHtml += '</tbody></table></div>';
+      stockReport.innerHTML = stockHtml;
+    } else {
+      stockReport.innerHTML = `<div class="alert alert-secondary"><strong>${data.lowStock}</strong> batches at low stock levels.</div>`;
+    }
+
     usageReport.innerHTML = `<div class="alert alert-primary"><strong>${data.upcomingAppointments}</strong> upcoming appointments scheduled.</div>`;
     appointmentReport.innerHTML = `<div class="alert alert-dark"><strong>${data.totalChildren}</strong> children in the system.</div>`;
   } catch (error) {
