@@ -7,230 +7,107 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f9fa;
-      color: #212529;
-    }
-    /* Hero Section */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; }
     .hero {
-      background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 50%, #34495e 100%);
+      background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
       color: white;
-      padding: 80px 0 60px;
-      position: relative;
-      overflow: hidden;
+      padding: 50px 0 40px;
+      text-align: center;
     }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 30px 30px;
-      animation: drift 20s linear infinite;
-    }
-    @keyframes drift {
-      from { transform: translate(0, 0); }
-      to { transform: translate(30px, 30px); }
-    }
-    .hero-content { position: relative; z-index: 1; }
-    .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 15px; }
-    .hero p { font-size: 1.2rem; opacity: 0.9; max-width: 600px; margin: 0 auto 30px; }
+    .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+    .hero p { font-size: 1rem; opacity: 0.85; max-width: 500px; margin: 0 auto; }
     .hero-badge {
       display: inline-block;
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
-      padding: 6px 18px;
+      padding: 4px 16px;
       border-radius: 20px;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
-      letter-spacing: 1px;
+      font-size: 0.8rem;
+      margin-bottom: 15px;
     }
-    /* Stats Bar */
-    .stats-bar {
-      background: white;
-      border-bottom: 1px solid #dee2e6;
-      padding: 20px 0;
-    }
-    .stat-item { text-align: center; }
-    .stat-item .number { font-size: 1.8rem; font-weight: 800; color: #1a2a3a; }
-    .stat-item .label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
-    /* Cards */
-    .portal-card {
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-      transition: all 0.3s ease;
-      height: 100%;
-      overflow: hidden;
-    }
-    .portal-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
-    .portal-card .card-body { padding: 30px; }
-    .portal-card .icon-circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
+    .portal-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      margin-bottom: 15px;
+      gap: 10px;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s;
     }
-    .icon-staff { background: #e8f0fe; color: #1a73e8; }
-    .icon-parent { background: #e8f5e9; color: #2e7d32; }
-    .btn-staff { background: #1a2a3a; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; }
-    .btn-staff:hover { background: #2c3e50; color: white; }
-    .btn-parent { background: #2e7d32; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; }
-    .btn-parent:hover { background: #1b5e20; color: white; }
-    /* Features */
-    .feature-item { text-align: center; padding: 20px; }
-    .feature-item .icon { font-size: 2rem; margin-bottom: 10px; }
-    .feature-item h6 { font-weight: 700; margin-bottom: 8px; }
-    .feature-item p { font-size: 0.9rem; color: #6c757d; }
-    /* Footer */
+    .portal-btn:hover { transform: translateY(-2px); color: white; }
+    .portal-btn-staff { background: #1a2a3a; color: white; }
+    .portal-btn-staff:hover { background: #2c3e50; }
+    .portal-btn-parent { background: #2e7d32; color: white; }
+    .portal-btn-parent:hover { background: #1b5e20; }
+    .quick-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #495057;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .quick-link:hover { background: #e9ecef; color: #212529; }
+    .stats-bar {
+      background: white;
+      padding: 15px 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .number { font-size: 1.5rem; font-weight: 800; color: #1a2a3a; }
+    .stat-item .label { font-size: 0.75rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
     footer {
       background: #1a2a3a;
       color: rgba(255,255,255,0.7);
-      padding: 30px 0;
+      padding: 20px 0;
       text-align: center;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     footer strong { color: white; }
-    /* Section */
-    .section-title {
-      font-weight: 700;
-      margin-bottom: 40px;
-      text-align: center;
-    }
-    .section-title span {
-      display: inline-block;
-      border-bottom: 3px solid #1a2a3a;
-      padding-bottom: 8px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- Hero Section -->
-  <section class="hero text-center">
-    <div class="container hero-content">
+  <section class="hero">
+    <div class="container">
       <div class="hero-badge">🏥 Kenyenya District Hospital</div>
       <h1>Child Vaccination System</h1>
-      <p>Digitizing immunization records, tracking vaccination schedules, and ensuring every child in our community receives life-saving vaccines on time.</p>
-      <div class="mt-4">
-        <a href="pages/login.html" class="btn btn-light btn-lg px-4 me-2 fw-bold">Staff Login</a>
-        <a href="pages/parent-login.html" class="btn btn-outline-light btn-lg px-4">Parent Portal</a>
+      <p>Digitizing immunization records & tracking vaccination schedules for every child.</p>
+      <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+        <a href="pages/login.html" class="portal-btn portal-btn-staff">
+          <span style="font-size:1.5rem;">👨‍⚕️</span> Staff Login
+        </a>
+        <a href="pages/parent-login.html" class="portal-btn portal-btn-parent">
+          <span style="font-size:1.5rem;">👨‍👩‍👧‍👦</span> Parent Portal
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- Stats Bar -->
   <section class="stats-bar">
     <div class="container">
       <div class="row" id="statsRow">
-        <div class="col-6 col-md-3 stat-item mb-3 mb-md-0">
-          <div class="number" id="statChildren">—</div>
-          <div class="label">Children Registered</div>
-        </div>
-        <div class="col-6 col-md-3 stat-item mb-3 mb-md-0">
-          <div class="number" id="statVaccinations">—</div>
-          <div class="label">Vaccinations Given</div>
-        </div>
-        <div class="col-6 col-md-3 stat-item">
-          <div class="number" id="statAppointments">—</div>
-          <div class="label">Upcoming Appointments</div>
-        </div>
-        <div class="col-6 col-md-3 stat-item">
-          <div class="number" id="statVaccines">—</div>
-          <div class="label">Vaccines in Stock</div>
-        </div>
+        <div class="col-3 col-md-3 stat-item"><div class="number" id="statChildren">—</div><div class="label">Children</div></div>
+        <div class="col-3 col-md-3 stat-item"><div class="number" id="statVaccinations">—</div><div class="label">Vaccinations</div></div>
+        <div class="col-3 col-md-3 stat-item"><div class="number" id="statAppointments">—</div><div class="label">Appointments</div></div>
+        <div class="col-3 col-md-3 stat-item"><div class="number" id="statVaccines">—</div><div class="label">Vaccines</div></div>
       </div>
     </div>
   </section>
 
-  <!-- Portal Access -->
-  <section class="py-5">
-    <div class="container">
-      <h2 class="section-title"><span>Access the System</span></h2>
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card portal-card">
-            <div class="card-body">
-              <div class="icon-circle icon-staff">👨‍⚕️</div>
-              <h4 class="fw-bold">Staff Portal</h4>
-              <p class="text-muted">For hospital administrators, nurses, pharmacists, and records officers. Manage children, appointments, vaccinations, inventory, and generate reports.</p>
-              <a href="pages/login.html" class="btn btn-staff">Login as Staff</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card portal-card">
-            <div class="card-body">
-              <div class="icon-circle icon-parent">👨‍👩‍👧‍👦</div>
-              <h4 class="fw-bold">Parent Portal</h4>
-              <p class="text-muted">For parents and guardians. View your child's vaccination schedule, track completed vaccines, and receive appointment reminders.</p>
-              <a href="pages/parent-login.html" class="btn btn-parent">Login as Parent</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <section class="py-5 bg-white">
-    <div class="container">
-      <h2 class="section-title"><span>System Features</span></h2>
-      <div class="row g-4">
-        <div class="col-md-4 feature-item">
-          <div class="icon">📋</div>
-          <h6>Patient Registration</h6>
-          <p>Register children and link them to guardians with unique patient IDs</p>
-        </div>
-        <div class="col-md-4 feature-item">
-          <div class="icon">💉</div>
-          <h6>Vaccination Tracking</h6>
-          <p>Record administered vaccines and track immunization history</p>
-        </div>
-        <div class="col-md-4 feature-item">
-          <div class="icon">📅</div>
-          <h6>Auto Schedule</h6>
-          <p>Age-based vaccine schedules following the Kenya KEPI guidelines</p>
-        </div>
-        <div class="col-md-4 feature-item">
-          <div class="icon">⏰</div>
-          <h6>Appointment Reminders</h6>
-          <p>Automated email reminders for upcoming vaccination visits</p>
-        </div>
-        <div class="col-md-4 feature-item">
-          <div class="icon">📦</div>
-          <h6>Inventory Management</h6>
-          <p>Track vaccine stock levels, batch numbers, and expiry dates</p>
-        </div>
-        <div class="col-md-4 feature-item">
-          <div class="icon">📊</div>
-          <h6>Reports & Analytics</h6>
-          <p>Monthly immunization reports, coverage statistics, and usage data</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
   <footer>
     <div class="container">
-      <p class="mb-1"><strong>Kenyenya District Hospital</strong> — Child Vaccination System</p>
-      <p class="mb-0">© 2026 All Rights Reserved | Secure Healthcare System</p>
+      <p class="mb-0"><strong>Kenyenya District Hospital</strong> — Child Vaccination System © 2026</p>
     </div>
   </footer>
 
   <script>
-    // Fetch live stats from the API
     async function loadStats() {
       try {
         const resp = await fetch('https://immunizationsys.onrender.com/api/reports');
@@ -239,11 +116,9 @@
           document.getElementById('statChildren').textContent = result.data.totalChildren || 0;
           document.getElementById('statVaccinations').textContent = result.data.totalVaccinations || 0;
           document.getElementById('statAppointments').textContent = result.data.upcomingAppointments || 0;
-          document.getElementById('statVaccines').textContent = (result.data.lowStock !== undefined) ? '✓' : '—';
+          document.getElementById('statVaccines').textContent = result.data.inventoryBreakdown ? Object.keys(result.data.inventoryBreakdown).length : '—';
         }
-      } catch (e) {
-        // Stats will show "—" if API is unreachable
-      }
+      } catch (e) {}
     }
     loadStats();
   </script>
