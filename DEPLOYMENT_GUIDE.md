@@ -48,7 +48,7 @@ JWT_EXPIRE=7d
 EMAIL_USER=ogarishelton@gmail.com
 EMAIL_PASS=atbm skpm sjgo jfle
 EMAIL_FROM=Child Vaccination System
-FRONTEND_URL=https://district-vaccination-sys.netlify.app
+FRONTEND_URL=https://child-immunization-hospitalsys.netlify.app
 ```
 
 ### Step 4: Verify Backend Script
@@ -123,7 +123,7 @@ REACT_APP_BACKEND_URL=https://child-immunization-api.onrender.com/api
 
 ### Step 6: Deploy
 - Netlify auto-deploys on git push
-- Your frontend will be at: `https://district-vaccination-sys.netlify.app` (or custom domain)
+- Your frontend will be at: `https://child-immunization-hospitalsys.netlify.app` (or custom domain)
 
 ---
 
@@ -138,7 +138,7 @@ Database: MongoDB Atlas (existing connection)
 
 ### Frontend (Netlify)
 ```
-Production URL: https://district-vaccination-sys.netlify.app
+Production URL: https://child-immunization-hospitalsys.netlify.app
 API Endpoint: https://child-immunization-api.onrender.com/api
 ```
 
@@ -156,7 +156,7 @@ Expected response:
 ```
 
 ### 2. Test Frontend Load
-Visit: `https://district-vaccination-sys.netlify.app`
+Visit: `https://child-immunization-hospitalsys.netlify.app`
 - Should redirect to login page
 - Check browser console for any API errors
 
