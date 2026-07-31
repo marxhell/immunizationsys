@@ -139,104 +139,29 @@ async function seedSampleData() {
     });
   }
 
-  if (existingBatches === 0) {
-    const sampleBatches = [
-      {
-        vaccineName: 'BCG',
-        batchNumber: 'BATCH-BCG-001',
-        quantity: 100,
-        minStock: 20,
-        dateReceived: '2026-01-10',
-        expiryDate: '2027-01-10',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'OPV',
-        batchNumber: 'BATCH-OPV-001',
-        quantity: 200,
-        minStock: 50,
-        dateReceived: '2026-01-15',
-        expiryDate: '2027-01-15',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'Pentavalent',
-        batchNumber: 'BATCH-PENTA-001',
-        quantity: 150,
-        minStock: 50,
-        dateReceived: '2026-01-10',
-        expiryDate: '2027-01-10',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'PCV',
-        batchNumber: 'BATCH-PCV-001',
-        quantity: 120,
-        minStock: 40,
-        dateReceived: '2026-02-01',
-        expiryDate: '2027-02-01',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'Rotavirus',
-        batchNumber: 'BATCH-ROTA-001',
-        quantity: 100,
-        minStock: 30,
-        dateReceived: '2026-02-10',
-        expiryDate: '2027-02-10',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'IPV',
-        batchNumber: 'BATCH-IPV-001',
-        quantity: 80,
-        minStock: 25,
-        dateReceived: '2026-03-01',
-        expiryDate: '2027-03-01',
-        supplier: 'UNICEF',
-      },
-      {
-        vaccineName: 'Measles',
-        batchNumber: 'BATCH-MEAS-001',
-        quantity: 60,
-        minStock: 30,
-        dateReceived: '2026-03-12',
-        expiryDate: '2026-12-12',
-        supplier: 'UNICEF',
-      },
-      {
-        vaccineName: 'Hepatitis B',
-        batchNumber: 'BATCH-HEPB-001',
-        quantity: 120,
-        minStock: 40,
-        dateReceived: '2026-04-01',
-        expiryDate: '2027-04-01',
-        supplier: 'KEMSA',
-      },
-      {
-        vaccineName: 'Yellow Fever',
-        batchNumber: 'BATCH-YF-001',
-        quantity: 50,
-        minStock: 20,
-        dateReceived: '2026-04-15',
-        expiryDate: '2027-04-15',
-        supplier: 'UNICEF',
-      },
-      {
-        vaccineName: 'Vitamin A',
-        batchNumber: 'BATCH-VITA-001',
-        quantity: 200,
-        minStock: 50,
-        dateReceived: '2026-05-01',
-        expiryDate: '2027-05-01',
-        supplier: 'KEMSA',
-      },
-    ];
+  // Seed any missing vaccine types from the KEPI schedule
+  const allVaccineNames = ['BCG', 'OPV', 'Pentavalent', 'PCV', 'Rotavirus', 'IPV', 'Measles', 'Hepatitis B', 'Yellow Fever', 'Vitamin A'];
+  const existingVaccineNames = await VaccineBatch.distinct('vaccineName');
+  const missingVaccines = allVaccineNames.filter((name) => !existingVaccineNames.includes(name));
 
-    await VaccineBatch.insertMany(sampleBatches);
+  for (const vaccineName of missingVaccines) {
+    await VaccineBatch.create({
+      vaccineName,
+      batchNumber: `BATCH-${vaccineName.replace(/\s+/g, '').toUpperCase()}-AUTO`,
+      quantity: 100,
+      minStock: 30,
+      dateReceived: new Date().toISOString().slice(0, 10),
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      supplier: 'KEMSA',
+    });
+    console.log(`Auto-seeded batch for: ${vaccineName}`);
   }
 
-  console.log('Seeded demo data and vaccine stock batches');
+  if (missingVaccines.length > 0) {
+    console.log(`Seeded ${missingVaccines.length} missing vaccine type(s): ${missingVaccines.join(', ')}`);
+  }
+
+  console.log('Seed check complete. Total batches in DB:', await VaccineBatch.countDocuments());
 }
 
 async function startServer() {
