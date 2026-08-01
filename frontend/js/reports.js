@@ -119,6 +119,19 @@ function downloadCurrentReportPdf() {
   doc.text(`• Batches at low stock: ${currentReportsData.lowStock}`, margin + 5, yPosition);
   yPosition += lineHeight;
 
+  // Add vaccine stock breakdown
+  if (currentReportsData.inventoryBreakdown) {
+    const sorted = Object.entries(currentReportsData.inventoryBreakdown).sort((a, b) => a[0].localeCompare(b[0]));
+    sorted.forEach(([name, info]) => {
+      if (yPosition > pageHeight - 20) {
+        doc.addPage();
+        yPosition = 15;
+      }
+      doc.text(`• ${name}: ${info.totalQuantity} doses remaining (min: ${info.totalMinStock})`, margin + 5, yPosition);
+      yPosition += lineHeight;
+    });
+  }
+
   addSection('Appointment Schedule', null);
   doc.text(`• Upcoming appointments: ${currentReportsData.upcomingAppointments}`, margin + 5, yPosition);
   yPosition += lineHeight;
